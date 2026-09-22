@@ -132,9 +132,25 @@ Repeats every day
 
 ---
 
+### ⏱ Time Tracking (Phase 6)
+- Automatic time calculation from task status history
+- No manual timer — just track when tasks change status
+- Time aggregated by status (TO DO, IN PROG, PENDING, DONE)
+- Time aggregated by project
+- Visible only in SUMMARY tab (HH:MM format)
+
+### 💾 Autosave & Versioning (Phase 6)
+- **Autosave:** Automatic backups every 10 minutes (configurable 5–60 min)
+- **Version control:** Keep up to 10 backup versions
+- **Auto-restore:** Latest backup restored on page load
+- **Manual restore:** Select any version from history in SETTINGS
+- **No data loss:** All backups stored locally in browser
+
+---
+
 ## File Size & Performance
 
-- **Single file:** `dashboard.html` (~56 KB)
+- **Single file:** `dashboard.html` (~65 KB)
 - **Load time:** Instant (no external requests)
 - **Browser support:** Chrome, Firefox, Safari, Edge
 - **Rendering:** O(n) where n = number of tasks/meetings
@@ -188,6 +204,12 @@ Repeats every day
 - Light mode (better for daytime/accessibility)
 - Toggle via button in header
 
+### Backup & Versioning
+- Autosave frequency (5–60 minutes, default 10)
+- Version history with manual restore buttons
+- Auto-restore latest backup on page load
+- Up to 10 backup versions kept locally
+
 ---
 
 ## Troubleshooting
@@ -230,7 +252,7 @@ Repeats every day
 
 ## What's Not Included
 
-- ❌ Time tracking (logged hours per task)
+- ❌ Manual time logging (hours per task) — automatic tracking from status history instead
 - ❌ Markdown in notes
 - ❌ Tags/labels
 - ❌ Recurring meetings (coming soon)
