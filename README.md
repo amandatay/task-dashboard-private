@@ -49,6 +49,18 @@ All colors follow a **dark pixel aesthetic** with sage green accents:
 | DONE | #5a6a4a | #5a6a4a | Completed (muted gray) |
 | FLAGGED | #e8ddb8 | #f0e8d0 | High priority (yellow) — overlays any state |
 
+## Theme Support
+
+### Light & Dark Modes
+- **Toggle button** in header (🌙 for dark, ☀️ for light)
+- **Theme preference** persists across sessions (localStorage)
+- **Light mode palette:**
+  - Light backgrounds (#f8f8f8, #ffffff)
+  - Dark text for contrast
+  - Adjusted state colors (warmer yellow for light backgrounds)
+  - Sage green accent maintained (#a6b08a)
+- **Accessibility** — Light mode better for daytime use and accessibility
+
 ## Keyboard Shortcuts
 
 | Shortcut | Action |

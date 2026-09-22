@@ -318,6 +318,32 @@ Label: "cmd = mac • ctrl = windows"
 - Drag-and-drop: cursor: grab, visual feedback on drag
 - Buttons: transparent bg, border-based style
 
+#### Light Mode (Optional Toggle)
+**Inverted palette while keeping sage green + state colors:**
+- **Primary accent:** Sage green (#a6b08a) — kept same
+- **Background:** Light (#f8f8f8)
+- **Cards/Surfaces:** White (#ffffff)
+- **Sidebar:** Very light gray (#f5f5f5)
+- **Text:** Dark sage (#5a6a4a for primary, #666 for secondary, #888 for tertiary)
+- **Borders:** Light gray (#d0d0d0)
+- **State colors (outline only) — lighter shades:**
+  - Lavender (working): #c9b8e4 (same, works on light bg)
+  - Pink (pending): #e4c5d8 (same, works on light bg)
+  - Yellow (flagged): #d4a76a (warmer tone for light bg, lighter than dark mode's #e8ddb8)
+  - TO DO (gray): #666
+  - IN PROG text: #7a6aa0
+  - PENDING text: #8a5a7a
+- **Success/completion:** Green (#7aaa6a, same)
+
+**Light Mode Benefits:**
+- Better for daytime use + accessibility
+- Keeps sage green as recognizable primary accent
+- State colors (lavender, pink, yellow) still pop on light backgrounds
+- Maintains pixel aesthetic + minimal design
+- Toggle via CSS variables (theme switcher optional)
+
+**Implementation:** Use CSS custom properties to swap between dark/light on page load or with user toggle. See INSTRUCTIONS.md CSS Guidelines section.
+
 ---
 
 ## Not Included (Explicitly Out of Scope)

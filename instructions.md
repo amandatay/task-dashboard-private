@@ -109,7 +109,7 @@ settings           → JSON object with user config
 
 ## Core Features (Implementation Order)
 
-### Phase 1: Data & Storage Foundation
+### Phase 1: Data & Storage Foundationf
 1. ✅ Initialize localStorage with defaults (if empty)
 2. ✅ Implement Task CRUD (Create, Read, Update, Delete)
 3. ✅ Implement Project CRUD
@@ -256,30 +256,87 @@ settings           → JSON object with user config
 ## Color Palette
 
 ### CSS Variables (define in `<style>`)
-```css
-:root {
-  --bg-dark: #2a2a2a;
-  --bg-card: #3d3d3d;
-  --bg-input: #2a2a2a;
+```:root {
+  /* Backgrounds */
+  --bg-dark: #2a2a2a;           /* Page background */
+  --bg-card: #3d3d3d;           /* Card/surface background */
+  --bg-input: #2a2a2a;          /* Input/select background */
   
-  --text-primary: #a6b08a;     /* Sage green - primary accent */
-  --text-secondary: #7a8a6a;   /* Muted sage */
-  --text-muted: #5a6a4a;       /* Very muted */
+  /* Text */
+  --text-primary: #a6b08a;      /* Primary text (sage green) */
+  --text-secondary: #7a8a6a;    /* Secondary text (muted) */
+  --text-muted: #5a6a4a;        /* Tertiary text (very muted) */
   
-  --border-default: #6a7a5a;
-  --border-secondary: #5a6a4a;
+  /* Borders */
+  --border-default: #6a7a5a;    /* Standard border */
+  --border-secondary: #5a6a4a;  /* Subtle border */
   
   /* State colors (outline + text) */
-  --color-todo: #a6b08a;       /* Gray */
-  --color-inprog: #c9b8e4;     /* Lavender */
-  --color-pending: #e4c5d8;    /* Pink */
-  --color-flagged: #e8ddb8;    /* Yellow */
-  --color-done: #5a6a4a;       /* Muted gray */
+  --color-todo: #a6b08a;        /* Gray (default) */
+  --color-inprog: #c9b8e4;      /* Lavender */
+  --text-inprog: #d9cce9;       /* Lavender text */
+  --color-pending: #e4c5d8;     /* Pink */
+  --text-pending: #e8c5d8;      /* Pink text */
+  --color-flagged: #e8ddb8;     /* Yellow */
+  --text-flagged: #f0e8d0;      /* Yellow text */
+  --color-done: #5a6a4a;        /* Muted gray */
   
-  /* Text colors for states */
-  --text-inprog: #d9cce9;
-  --text-pending: #e8c5d8;
-  --text-flagged: #f0e8d0;
+  /* Utility colors */
+  --color-success: #7aaa6a;     /* Green (completion) */
+  --color-warning: #d4756a;     /* Red-ish (overdue) */
+}
+
+/* Light Mode (optional toggle or auto-detect) */
+@media (prefers-color-scheme: light) {
+  :root {
+    /* Backgrounds */
+    --bg-dark: #f8f8f8;         /* Light page bg */
+    --bg-card: #ffffff;         /* White card bg */
+    --bg-input: #f8f8f8;        /* Light input bg */
+    
+    /* Text */
+    --text-primary: #5a6a4a;    /* Dark sage primary */
+    --text-secondary: #666;     /* Dark gray secondary */
+    --text-muted: #888;         /* Lighter gray tertiary */
+    
+    /* Borders */
+    --border-default: #d0d0d0;  /* Light border */
+    --border-secondary: #e0e0e0;/* Lighter border */
+    
+    /* State colors (same accent colors, darker text on light bg) */
+    --color-todo: #666;         /* Gray text */
+    --color-inprog: #c9b8e4;    /* Lavender (unchanged) */
+    --text-inprog: #7a6aa0;     /* Darker lavender text */
+    --color-pending: #e4c5d8;   /* Pink (unchanged) */
+    --text-pending: #8a5a7a;    /* Darker pink text */
+    --color-flagged: #d4a76a;   /* Warmer yellow-gold */
+    --text-flagged: #8a6a3a;    /* Brown text */
+    --color-done: #ccc;         /* Light gray (muted) */
+    
+    /* Utility colors (unchanged) */
+    --color-success: #7aaa6a;
+    --color-warning: #d4756a;
+  }
+}
+
+/* Manual Light Mode Toggle (if theme switcher added) */
+body.light-mode {
+  --bg-dark: #f8f8f8;
+  --bg-card: #ffffff;
+  --bg-input: #f8f8f8;
+  --text-primary: #5a6a4a;
+  --text-secondary: #666;
+  --text-muted: #888;
+  --border-default: #d0d0d0;
+  --border-secondary: #e0e0e0;
+  --color-todo: #666;
+  --color-inprog: #c9b8e4;
+  --text-inprog: #7a6aa0;
+  --color-pending: #e4c5d8;
+  --text-pending: #8a5a7a;
+  --color-flagged: #d4a76a;
+  --text-flagged: #8a6a3a;
+  --color-done: #ccc;
 }
 ```
 
@@ -471,6 +528,32 @@ cmd/ctrl+/ → filter
 cmd/ctrl+e → export
 cmd/ctrl+k → all shortcuts
 ```
+
+---
+### Light Mode Implementation (Optional)
+**Minimum:** Just use CSS media query (`prefers-color-scheme: light`)  
+**Better:** Add theme toggle in SETTINGS tab:
+```javascript
+function toggleTheme() {
+  const isDark = localStorage.getItem('theme') === 'dark';
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  applyTheme(isDark ? 'light' : 'dark');
+}
+
+function applyTheme(theme) {
+  if (theme === 'light') {
+    document.body.classList.add('light-mode');
+  } else {
+    document.body.classList.remove('light-mode');
+  }
+}
+
+// On page load:
+const savedTheme = localStorage.getItem('theme') || 'dark';
+applyTheme(savedTheme);
+```
+
+Add toggle button in SETTINGS tab to switch theme manually.
 
 ---
 

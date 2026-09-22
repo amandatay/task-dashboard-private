@@ -6,6 +6,7 @@
   <title>Task Dashboard</title>
   <style>
     :root {
+      /* Dark mode (default) */
       --bg-dark: #2a2a2a;
       --bg-card: #3d3d3d;
       --bg-input: #2a2a2a;
@@ -26,6 +27,30 @@
       --text-inprog: #d9cce9;
       --text-pending: #e8c5d8;
       --text-flagged: #f0e8d0;
+    }
+
+    /* Light mode */
+    body.light-mode {
+      --bg-dark: #f8f8f8;
+      --bg-card: #ffffff;
+      --bg-input: #f5f5f5;
+
+      --text-primary: #5a6a4a;
+      --text-secondary: #666666;
+      --text-muted: #888888;
+
+      --border-default: #d0d0d0;
+      --border-secondary: #d0d0d0;
+
+      --color-todo: #666666;
+      --color-inprog: #c9b8e4;
+      --color-pending: #e4c5d8;
+      --color-flagged: #d4a76a;
+      --color-done: #7aaa6a;
+
+      --text-inprog: #7a6aa0;
+      --text-pending: #8a5a7a;
+      --text-flagged: #8a6a4a;
     }
 
     * {
@@ -144,6 +169,23 @@
     .header-time {
       font-size: 9px;
       color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .theme-toggle-btn {
+      background-color: transparent;
+      border: 1px solid var(--border-secondary);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 6px 8px;
+      font-family: 'Courier New', monospace;
+      transition: all 0.2s;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--text-primary);
+      background-color: var(--bg-input);
     }
 
     /* Content Area */
@@ -993,7 +1035,10 @@
     <div class="main">
       <div class="header">
         <div class="header-title" id="header-title">🕐 TASKS</div>
-        <div class="header-time" id="header-time">22 Sep 2026 • 14:32 SGT</div>
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <button id="theme-toggle-btn" class="theme-toggle-btn" title="Toggle light/dark mode">🌙</button>
+          <div class="header-time" id="header-time">22 Sep 2026 • 14:32 SGT</div>
+        </div>
       </div>
 
       <div class="content">
@@ -1972,6 +2017,30 @@
       reader.readAsText(file);
     }
 
+    function toggleTheme() {
+      const isDark = document.body.classList.contains('light-mode');
+      if (isDark) {
+        document.body.classList.remove('light-mode');
+        localStorage.setItem('theme', 'dark');
+        document.getElementById('theme-toggle-btn').textContent = '🌙';
+      } else {
+        document.body.classList.add('light-mode');
+        localStorage.setItem('theme', 'light');
+        document.getElementById('theme-toggle-btn').textContent = '☀️';
+      }
+    }
+
+    function loadTheme() {
+      const theme = localStorage.getItem('theme') || 'dark';
+      if (theme === 'light') {
+        document.body.classList.add('light-mode');
+        document.getElementById('theme-toggle-btn').textContent = '☀️';
+      } else {
+        document.body.classList.remove('light-mode');
+        document.getElementById('theme-toggle-btn').textContent = '🌙';
+      }
+    }
+
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
@@ -2077,6 +2146,9 @@
       }
     });
 
+    // Theme toggle
+    document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
@@ -2109,6 +2181,7 @@
     });
 
     // ===== INIT =====
+    loadTheme();
     loadFromStorage();
     initDefaults();
     populateProjectDropdowns();
