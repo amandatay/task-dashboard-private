@@ -395,15 +395,36 @@
 
     .notes-feedback {
       font-size: 9px;
-      text-align: right;
       opacity: 0;
       transition: opacity 0.3s ease;
       color: #7aaa6a;
       font-weight: bold;
+      white-space: nowrap;
     }
 
     .notes-feedback.show {
       opacity: 1;
+    }
+
+    .notes-save-btn,
+    .notes-close-btn {
+      padding: 6px 10px;
+      background-color: var(--bg-input);
+      border: 1px solid;
+      border-color: inherit;
+      color: inherit;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    .notes-save-btn:hover,
+    .notes-close-btn:hover {
+      background-color: inherit;
+      color: var(--bg-dark);
     }
 
     .task-button {
@@ -1520,104 +1541,119 @@
     }
 
     function renderTasks() {
-      const activeContainer = document.getElementById('active-tasks');
-      const doneContainer = document.getElementById('done-tasks');
-      activeContainer.innerHTML = '';
-      doneContainer.innerHTML = '';
+      try {
+        const activeContainer = document.getElementById('active-tasks');
+        const doneContainer = document.getElementById('done-tasks');
+        activeContainer.innerHTML = '';
+        doneContainer.innerHTML = '';
 
-      const activeTasks = app.tasks.filter(t => t.status !== 'DONE').sort((a, b) => a.order - b.order);
-      const doneTasks = app.tasks.filter(t => t.status === 'DONE');
+        const activeTasks = app.tasks.filter(t => t.status !== 'DONE').sort((a, b) => a.order - b.order);
+        const doneTasks = app.tasks.filter(t => t.status === 'DONE');
 
-      document.getElementById('done-count').textContent = doneTasks.length;
+        document.getElementById('done-count').textContent = doneTasks.length;
 
-      activeTasks.forEach(task => {
-        const cardClass = getTaskCardClass(task);
-        const statusKey = task.status.toLowerCase().replace(' ', '');
-        const card = document.createElement('div');
-        card.className = `task-card ${cardClass}`;
-        card.setAttribute('data-task-id', task.id);
+        activeTasks.forEach(task => {
+          const cardClass = getTaskCardClass(task);
+          const card = document.createElement('div');
+          card.className = `task-card ${cardClass}`;
+          card.setAttribute('data-task-id', task.id);
 
-        const buttonText = task.status === 'TO DO' ? 'Start working' : task.status === 'IN PROG' ? 'Done' : 'Start working';
-        const shouldShowDoneBtn = task.status !== 'DONE' && (task.status === 'TO DO' || task.status === 'IN PROG');
+          const buttonText = task.status === 'TO DO' ? 'Start working' : task.status === 'IN PROG' ? 'Done' : 'Start working';
 
-        card.innerHTML = `
-          <div class="drag-handle" draggable="true">⋮⋮</div>
-          <div>
-            <div class="task-title">${task.title}</div>
-            <div class="task-meta">${task.project}${task.stage ? ' → ' + task.stage : ''}</div>
-          </div>
-          <select class="task-status" data-task-id="${task.id}">
-            ${app.settings.statuses.map(s => `<option value="${s.name}" ${task.status === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
-          </select>
-          <div class="task-date">${formatDate(task.dueDate)}</div>
-          ${renderNotesControl(task)}
-          <button class="task-button" data-task-id="${task.id}" data-action="toggle">${buttonText}</button>
-          <button class="task-button" data-task-id="${task.id}" data-action="flag">🚩</button>
-          <button class="task-delete" data-task-id="${task.id}" data-action="delete">×</button>
-        `;
-
-        activeContainer.appendChild(card);
-
-        if (app.noteExpandedState[task.id]) {
-          const notesEditor = document.createElement('div');
-          notesEditor.className = 'task-notes-editor';
-          notesEditor.setAttribute('data-task-id', task.id);
-          notesEditor.setAttribute('data-expanded', 'true');
-          notesEditor.innerHTML = `
-            <textarea
-              class="notes-textarea"
-              data-task-id="${task.id}"
-              placeholder="Add notes..."
-            >${task.notes || ''}</textarea>
-            <div class="notes-feedback"></div>
+          card.innerHTML = `
+            <div class="drag-handle" draggable="true">⋮⋮</div>
+            <div>
+              <div class="task-title">${task.title}</div>
+              <div class="task-meta">${task.project}${task.stage ? ' → ' + task.stage : ''}</div>
+            </div>
+            <select class="task-status" data-task-id="${task.id}">
+              ${app.settings.statuses.map(s => `<option value="${s.name}" ${task.status === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
+            </select>
+            <div class="task-date">${formatDate(task.dueDate)}</div>
+            ${renderNotesControl(task)}
+            <button class="task-button" data-task-id="${task.id}" data-action="toggle">${buttonText}</button>
+            <button class="task-button" data-task-id="${task.id}" data-action="flag">🚩</button>
+            <button class="task-delete" data-task-id="${task.id}" data-action="delete">×</button>
           `;
-          card.appendChild(notesEditor);
-        }
-      });
+
+          activeContainer.appendChild(card);
+
+          if (app.noteExpandedState[task.id]) {
+            const notesEditor = document.createElement('div');
+            notesEditor.className = 'task-notes-editor';
+            notesEditor.setAttribute('data-task-id', task.id);
+            notesEditor.setAttribute('data-expanded', 'true');
+            notesEditor.innerHTML = `
+              <textarea
+                class="notes-textarea"
+                data-task-id="${task.id}"
+                placeholder="Add notes..."
+              >${task.notes || ''}</textarea>
+              <div style="display: flex; gap: 8px; margin-top: 6px;">
+                <button class="notes-save-btn" data-task-id="${task.id}">SAVE</button>
+                <button class="notes-close-btn" data-task-id="${task.id}">CLOSE</button>
+                <div class="notes-feedback" style="margin-left: auto;"></div>
+              </div>
+            `;
+            card.appendChild(notesEditor);
+          }
+        });
 
       doneTasks.forEach(task => {
-        const cardClass = getTaskCardClass(task);
-        const card = document.createElement('div');
-        card.className = `task-card ${cardClass}`;
-        card.setAttribute('data-task-id', task.id);
+        try {
+          const cardClass = getTaskCardClass(task);
+          const card = document.createElement('div');
+          card.className = `task-card ${cardClass}`;
+          card.setAttribute('data-task-id', task.id);
 
-        card.innerHTML = `
-          <div class="drag-handle" draggable="true">⋮⋮</div>
-          <div>
-            <div class="task-title">${task.title}</div>
-            <div class="task-meta">${task.project}${task.stage ? ' → ' + task.stage : ''}</div>
-          </div>
-          <select class="task-status" data-task-id="${task.id}">
-            ${app.settings.statuses.map(s => `<option value="${s.name}" ${task.status === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
-          </select>
-          <div class="task-date">${formatDate(task.dueDate)}</div>
-          ${renderNotesControl(task)}
-          <button class="task-button" data-task-id="${task.id}" data-action="toggle">Start working</button>
-          <button class="task-button" data-task-id="${task.id}" data-action="flag">🚩</button>
-          <button class="task-delete" data-task-id="${task.id}" data-action="delete">×</button>
-        `;
-
-        doneContainer.appendChild(card);
-
-        if (app.noteExpandedState[task.id]) {
-          const notesEditor = document.createElement('div');
-          notesEditor.className = 'task-notes-editor';
-          notesEditor.setAttribute('data-task-id', task.id);
-          notesEditor.setAttribute('data-expanded', 'true');
-          notesEditor.innerHTML = `
-            <textarea
-              class="notes-textarea"
-              data-task-id="${task.id}"
-              placeholder="Add notes..."
-            >${task.notes || ''}</textarea>
-            <div class="notes-feedback"></div>
+          card.innerHTML = `
+            <div class="drag-handle" draggable="true">⋮⋮</div>
+            <div>
+              <div class="task-title">${task.title}</div>
+              <div class="task-meta">${task.project}${task.stage ? ' → ' + task.stage : ''}</div>
+            </div>
+            <select class="task-status" data-task-id="${task.id}">
+              ${app.settings.statuses.map(s => `<option value="${s.name}" ${task.status === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
+            </select>
+            <div class="task-date">${formatDate(task.dueDate)}</div>
+            ${renderNotesControl(task)}
+            <button class="task-button" data-task-id="${task.id}" data-action="toggle">Start working</button>
+            <button class="task-button" data-task-id="${task.id}" data-action="flag">🚩</button>
+            <button class="task-delete" data-task-id="${task.id}" data-action="delete">×</button>
           `;
-          doneContainer.appendChild(notesEditor);
+
+          doneContainer.appendChild(card);
+
+          if (app.noteExpandedState[task.id]) {
+            const notesEditor = document.createElement('div');
+            notesEditor.className = 'task-notes-editor';
+            notesEditor.setAttribute('data-task-id', task.id);
+            notesEditor.setAttribute('data-expanded', 'true');
+            notesEditor.innerHTML = `
+              <textarea
+                class="notes-textarea"
+                data-task-id="${task.id}"
+                placeholder="Add notes..."
+              >${task.notes || ''}</textarea>
+              <div style="display: flex; gap: 8px; margin-top: 6px;">
+                <button class="notes-save-btn" data-task-id="${task.id}">SAVE</button>
+                <button class="notes-close-btn" data-task-id="${task.id}">CLOSE</button>
+                <div class="notes-feedback" style="margin-left: auto;"></div>
+              </div>
+            `;
+            card.appendChild(notesEditor);
+          }
+        } catch (error) {
+          console.error('Error rendering done task:', error);
         }
       });
 
-      attachTaskEventListeners();
-      updateStats();
+        attachTaskEventListeners();
+        updateStats();
+      } catch (error) {
+        console.error('Fatal error in renderTasks:', error);
+        console.error('Stack:', error.stack);
+      }
     }
 
     function renderNotesControl(task) {
@@ -1775,25 +1811,37 @@
         });
       });
 
-      // Notes textarea events
-      document.querySelectorAll('.notes-textarea').forEach(textarea => {
-        textarea.addEventListener('blur', (e) => {
-          const taskId = e.target.getAttribute('data-task-id');
-          const noteText = e.target.value;
-          saveNotesWithFeedback(taskId, noteText);
-          setTimeout(() => closeNotes(taskId), 1500);
+      // Notes Save button
+      document.querySelectorAll('.notes-save-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const taskId = btn.getAttribute('data-task-id');
+          const textarea = document.querySelector(`.notes-textarea[data-task-id="${taskId}"]`);
+          if (textarea) {
+            saveNotesWithFeedback(taskId, textarea.value);
+            setTimeout(() => closeNotes(taskId), 1500);
+          }
         });
+      });
 
+      // Notes Close button
+      document.querySelectorAll('.notes-close-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const taskId = btn.getAttribute('data-task-id');
+          closeNotes(taskId);
+        });
+      });
+
+      // Notes textarea Escape key
+      document.querySelectorAll('.notes-textarea').forEach(textarea => {
         textarea.addEventListener('keydown', (e) => {
           const taskId = e.target.getAttribute('data-task-id');
-          const noteText = e.target.value;
 
           if (e.key === 'Escape') {
             e.preventDefault();
             closeNotes(taskId);
           } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             e.preventDefault();
-            saveNotesWithFeedback(taskId, noteText);
+            saveNotesWithFeedback(taskId, textarea.value);
             setTimeout(() => closeNotes(taskId), 1500);
           }
         });
