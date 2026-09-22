@@ -1746,6 +1746,49 @@
       color: var(--text-muted);
       font-style: italic;
     }
+
+    /* Tasks View Toggle */
+    .tasks-view-toggle {
+      display: flex;
+      gap: 8px;
+      padding: 8px 0;
+      margin-bottom: 12px;
+      justify-content: flex-start;
+    }
+
+    .view-toggle-btn {
+      padding: 6px 10px;
+      font-size: 9px;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      text-transform: uppercase;
+      background-color: transparent;
+      border: 1px solid var(--border-secondary);
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .view-toggle-btn:hover {
+      border-color: var(--text-primary);
+      color: var(--text-primary);
+    }
+
+    .view-toggle-btn.active {
+      background-color: rgba(166, 176, 138, 0.2);
+      border-color: var(--color-todo);
+      color: var(--text-primary);
+    }
+
+    @media (max-width: 768px) {
+      .tasks-view-toggle {
+        flex-wrap: wrap;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1753,8 +1796,7 @@
     <div class="sidebar">
       <div class="sidebar-title">📋 VIEWS</div>
       <div class="nav-tabs">
-        <button class="nav-tab active" data-tab="list">LIST</button>
-        <button class="nav-tab" data-tab="kanban">KANBAN</button>
+        <button class="nav-tab active" data-tab="tasks">TASKS</button>
         <button class="nav-tab" data-tab="timeline">TIMELINE</button>
         <button class="nav-tab" data-tab="calendar">CALENDAR</button>
         <button class="nav-tab" data-tab="summary">SUMMARY</button>
@@ -1783,8 +1825,8 @@
       </div>
 
       <div class="content">
-        <!-- LIST TAB -->
-        <div id="list-view" class="tab-content active">
+        <!-- TASKS TAB (LIST + KANBAN) -->
+        <div id="tasks-view" class="tab-content active">
           <!-- Quick Add Form (Expandable) -->
           <div class="quick-add-container">
             <div class="quick-add-form">
@@ -1907,11 +1949,31 @@
             </div>
           </div>
 
-          <div class="tasks-list" id="active-tasks"></div>
+          <!-- View Toggle -->
+          <div class="tasks-view-toggle">
+            <button class="view-toggle-btn active" id="toggle-list-view">
+              <span>≡</span> LIST
+            </button>
+            <button class="view-toggle-btn" id="toggle-kanban-view">
+              <span>⊞</span> KANBAN
+            </button>
+          </div>
 
-          <div class="done-section">
-            <button class="done-toggle" id="done-toggle">▶ DONE (<span id="done-count">0</span>)</button>
-            <div class="done-tasks" id="done-tasks"></div>
+          <!-- LIST View Container -->
+          <div id="list-view-container" style="display: block;">
+            <div class="tasks-list" id="active-tasks"></div>
+            <div class="done-section">
+              <button class="done-toggle" id="done-toggle">▶ DONE (<span id="done-count">0</span>)</button>
+              <div class="done-tasks" id="done-tasks"></div>
+            </div>
+          </div>
+
+          <!-- KANBAN View Container -->
+          <div id="kanban-view-container" style="display: none;">
+            <div class="kanban-project-selector" id="kanban-project-selector" style="padding: 12px; border-bottom: 1px solid var(--border-secondary); display: flex; gap: 8px; flex-wrap: wrap;"></div>
+            <div class="kanban-board" id="kanban-board">
+              <!-- Columns will be generated here -->
+            </div>
           </div>
 
           <div class="shortcuts">
@@ -1919,14 +1981,6 @@
             <div class="shortcut-item">cmd/ctrl+n → New task</div>
             <div class="shortcut-item">cmd/ctrl+w → Working on</div>
             <div class="shortcut-item">cmd/ctrl+d → Mark done</div>
-          </div>
-        </div>
-
-        <!-- KANBAN TAB -->
-        <div id="kanban-view" class="tab-content" style="display: none;">
-          <div class="kanban-project-selector" id="kanban-project-selector" style="padding: 12px; border-bottom: 1px solid var(--border-secondary); display: flex; gap: 8px; flex-wrap: wrap;"></div>
-          <div class="kanban-board" id="kanban-board">
-            <!-- Columns will be generated here -->
           </div>
         </div>
 
@@ -2186,6 +2240,7 @@
     // ===== APP STATE =====
     const app = {
       currentTab: 'tasks',
+      currentTasksView: 'list', // 'list' or 'kanban'
       tasks: [],
       meetings: [],
       projects: [],
@@ -2195,6 +2250,12 @@
       projectExpandedState: {},
       selectedKanbanProject: null,
       currentCalendarDate: new Date(),
+      formState: {
+        taskTitle: '',
+        taskProject: '',
+        taskDate: '',
+        taskRecurrence: 'never'
+      }
     };
 
     // ===== STORAGE =====
@@ -3758,6 +3819,43 @@
       }
     }
 
+    function saveFormState() {
+      app.formState = {
+        taskTitle: document.getElementById('task-title').value,
+        taskProject: document.getElementById('task-project').value,
+        taskDate: document.getElementById('task-date').value,
+        taskRecurrence: document.getElementById('task-recurrence').value
+      };
+    }
+
+    function restoreFormState() {
+      document.getElementById('task-title').value = app.formState.taskTitle || '';
+      document.getElementById('task-project').value = app.formState.taskProject || '';
+      document.getElementById('task-date').value = app.formState.taskDate || '';
+      document.getElementById('task-recurrence').value = app.formState.taskRecurrence || 'never';
+    }
+
+    function switchTasksView(viewName) {
+      saveFormState();
+
+      app.currentTasksView = viewName;
+      localStorage.setItem('currentTasksView', viewName);
+
+      document.getElementById('list-view-container').style.display = viewName === 'list' ? 'block' : 'none';
+      document.getElementById('kanban-view-container').style.display = viewName === 'kanban' ? 'block' : 'none';
+
+      document.getElementById('toggle-list-view').classList.toggle('active', viewName === 'list');
+      document.getElementById('toggle-kanban-view').classList.toggle('active', viewName === 'kanban');
+
+      if (viewName === 'list') {
+        renderTasks();
+      } else if (viewName === 'kanban') {
+        renderKanbanView();
+      }
+
+      restoreFormState();
+    }
+
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
       document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
@@ -3769,8 +3867,7 @@
       document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
 
       const titles = {
-        'list': '🕐 LIST',
-        'kanban': '🕐 KANBAN',
+        'tasks': '🕐 TASKS',
         'timeline': '📋 TIMELINE',
         'calendar': '📅 CALENDAR',
         'summary': '📊 SUMMARY',
@@ -3781,8 +3878,10 @@
       app.currentTab = tabName;
       localStorage.setItem('currentTab', tabName);
 
-      if (tabName === 'list') renderTasks();
-      if (tabName === 'kanban') renderKanbanView();
+      if (tabName === 'tasks') {
+        restoreFormState();
+        switchTasksView(app.currentTasksView);
+      }
       if (tabName === 'timeline') renderTimeline();
       if (tabName === 'calendar') renderWeeklyMeetingView();
       if (tabName === 'summary') renderSummary();
@@ -3790,6 +3889,10 @@
     }
 
     // ===== EVENT LISTENERS =====
+    // Tasks view toggle
+    document.getElementById('toggle-list-view').addEventListener('click', () => switchTasksView('list'));
+    document.getElementById('toggle-kanban-view').addEventListener('click', () => switchTasksView('kanban'));
+
     document.getElementById('add-task-btn').addEventListener('click', () => {
       const title = document.getElementById('task-title').value;
       const project = document.getElementById('task-project').value;
@@ -3861,7 +3964,12 @@
         document.getElementById('quickAddToggleAdvanced').textContent = '+ More';
 
         document.getElementById('task-title').focus();
-        renderTasks();
+        // Re-render the current tasks view
+        if (app.currentTasksView === 'list') {
+          renderTasks();
+        } else if (app.currentTasksView === 'kanban') {
+          renderKanbanView();
+        }
         renderSummary();
       }
     });
@@ -4020,13 +4128,14 @@
     loadFromStorage();
     initDefaults();
     populateProjectDropdowns();
-    renderTasks();
-    renderSummary();
     updateSidebarCalendarWidget();
     updateClock();
     setInterval(updateClock, 1000);
 
-    const savedTab = localStorage.getItem('currentTab') || 'list';
+    // Load saved tasks view preference
+    app.currentTasksView = localStorage.getItem('currentTasksView') || 'list';
+
+    const savedTab = localStorage.getItem('currentTab') || 'tasks';
     switchTab(savedTab);
   </script>
 </body>
