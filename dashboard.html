@@ -1536,34 +1536,56 @@
 
     function attachTaskEventListeners() {
       // Drag and drop
-      document.querySelectorAll('.drag-handle').forEach(handle => {
-        handle.addEventListener('dragstart', (e) => {
-          const taskId = e.target.closest('.task-card').getAttribute('data-task-id');
-          app.draggedTaskId = taskId;
-          e.target.closest('.task-card').style.opacity = '0.5';
+      document.querySelectorAll('.task-card').forEach(card => {
+        card.addEventListener('dragstart', (e) => {
+          if (e.target.closest('.drag-handle')) {
+            const taskId = card.getAttribute('data-task-id');
+            app.draggedTaskId = taskId;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', card.innerHTML);
+            card.style.opacity = '0.5';
+          }
         });
 
-        handle.addEventListener('dragend', (e) => {
-          e.target.closest('.task-card').style.opacity = '1';
+        card.addEventListener('dragend', (e) => {
+          card.style.opacity = '1';
+          document.querySelectorAll('.task-card').forEach(c => c.style.borderTop = '');
           app.draggedTaskId = null;
         });
 
-        handle.addEventListener('dragover', (e) => {
-          e.preventDefault();
+        card.addEventListener('dragover', (e) => {
+          if (app.draggedTaskId) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const taskId = card.getAttribute('data-task-id');
+            if (taskId !== app.draggedTaskId) {
+              card.style.borderTop = '2px solid var(--color-inprog)';
+            }
+          }
         });
 
-        handle.addEventListener('drop', (e) => {
+        card.addEventListener('dragleave', (e) => {
+          card.style.borderTop = '';
+        });
+
+        card.addEventListener('drop', (e) => {
           e.preventDefault();
-          const targetTaskId = e.target.closest('.task-card').getAttribute('data-task-id');
+          e.stopPropagation();
+          card.style.borderTop = '';
+          const targetTaskId = card.getAttribute('data-task-id');
+
           if (app.draggedTaskId && app.draggedTaskId !== targetTaskId) {
             const draggedTask = app.tasks.find(t => t.id === app.draggedTaskId);
             const targetTask = app.tasks.find(t => t.id === targetTaskId);
-            const tempOrder = draggedTask.order;
-            draggedTask.order = targetTask.order;
-            targetTask.order = tempOrder;
-            saveToStorage();
-            renderTasks();
+            if (draggedTask && targetTask) {
+              const tempOrder = draggedTask.order;
+              draggedTask.order = targetTask.order;
+              targetTask.order = tempOrder;
+              saveToStorage();
+              renderTasks();
+            }
           }
+          app.draggedTaskId = null;
         });
       });
 
