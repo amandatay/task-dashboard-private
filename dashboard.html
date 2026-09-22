@@ -1060,6 +1060,71 @@
       color: #d4756a;
     }
 
+    /* Quick Add Expandable */
+    .quick-add-container {
+      background-color: var(--bg-dark);
+      border-bottom: 2px solid var(--border-default);
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+
+    .quick-add-form {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 0.8fr;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 0;
+    }
+
+    .quick-add-input {
+      padding: 8px;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-secondary);
+      color: var(--text-primary);
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+    }
+
+    .quick-add-input:focus {
+      outline: none;
+      border-color: var(--text-primary);
+    }
+
+    .quick-add-toggle {
+      background-color: transparent;
+      border: 1px solid var(--border-secondary);
+      color: var(--text-secondary);
+      padding: 6px 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .quick-add-toggle:hover {
+      border-color: var(--text-primary);
+      color: var(--text-primary);
+    }
+
+    .quick-add-advanced {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-secondary);
+    }
+
+    .advanced-row {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .advanced-label {
+      font-size: 9px;
+      color: var(--text-primary);
+      font-weight: bold;
+    }
+
     /* Keyboard shortcuts */
     .shortcuts {
       margin-top: 16px;
@@ -1107,9 +1172,10 @@
 <body>
   <div class="container">
     <div class="sidebar">
-      <div class="sidebar-title">📋 TASKS</div>
+      <div class="sidebar-title">📋 VIEWS</div>
       <div class="nav-tabs">
-        <button class="nav-tab active" data-tab="tasks">Tasks</button>
+        <button class="nav-tab active" data-tab="list">LIST</button>
+        <button class="nav-tab" data-tab="kanban">KANBAN</button>
         <button class="nav-tab" data-tab="timeline">Timeline</button>
         <button class="nav-tab" data-tab="summary">Summary</button>
         <button class="nav-tab" data-tab="settings">Settings</button>
@@ -1132,15 +1198,32 @@
       </div>
 
       <div class="content">
-        <!-- TASKS TAB -->
+        <!-- TASKS TAB (LIST/KANBAN) -->
         <div id="tasks-view" class="tab-content active">
-          <div class="quick-add">
-            <input id="task-title" type="text" placeholder="Task title...">
-            <select id="task-project">
-              <option value="">Select project</option>
-            </select>
-            <input id="task-date" type="date">
-            <button id="add-task-btn">ADD</button>
+          <!-- Quick Add Form (Expandable) -->
+          <div class="quick-add-container">
+            <div class="quick-add-form">
+              <input id="task-title" type="text" placeholder="Task title..." class="quick-add-input">
+              <select id="task-project" class="quick-add-input">
+                <option value="">Select project</option>
+              </select>
+              <input id="task-date" type="date" placeholder="DD MMM YYYY" class="quick-add-input" readonly>
+              <button id="quickAddToggleAdvanced" class="quick-add-toggle">+ More</button>
+              <button id="add-task-btn" class="task-button" style="background-color: var(--color-success); color: white; border: none;">ADD</button>
+            </div>
+
+            <!-- Advanced Options (Expandable) -->
+            <div id="quickAddAdvanced" class="quick-add-advanced" style="display: none;">
+              <div class="advanced-row">
+                <label for="task-recurrence" class="advanced-label">Recurrence:</label>
+                <select id="task-recurrence" class="quick-add-input">
+                  <option value="never">Never</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           <div class="tasks-list" id="active-tasks"></div>
@@ -1403,7 +1486,7 @@
     }
 
     // ===== TASK MANAGEMENT =====
-    function createTask(title, project, dueDate) {
+    function createTask(title, project, dueDate, recurrence = { type: 'never' }) {
       if (!title || !project) return null;
       const task = {
         id: generateUUID(),
@@ -1414,6 +1497,8 @@
         dueDate,
         notes: '',
         priority: false,
+        recurrence: recurrence || { type: 'never' },
+        recurrenceParentId: null,
         createdAt: new Date().toISOString(),
         startedAt: null,
         completedAt: null,
@@ -1437,6 +1522,58 @@
       saveToStorage();
     }
 
+    function generateNextRecurringTask(parentTask) {
+      if (!parentTask || parentTask.recurrence.type === 'never') return null;
+
+      // Calculate next due date
+      const currentDate = new Date(parentTask.dueDate + 'T00:00:00');
+      let nextDate = new Date(currentDate);
+
+      switch (parentTask.recurrence.type) {
+        case 'daily':
+          nextDate.setDate(nextDate.getDate() + 1);
+          break;
+        case 'weekly':
+          nextDate.setDate(nextDate.getDate() + 7);
+          break;
+        case 'monthly':
+          nextDate.setMonth(nextDate.getMonth() + 1);
+          break;
+      }
+
+      const nextDateStr = nextDate.toISOString().split('T')[0];
+
+      // Count existing instances to number the next one
+      const instances = app.tasks.filter(t =>
+        t.recurrenceParentId === parentTask.id || t.id === parentTask.id
+      );
+      const instanceNumber = instances.length + 1;
+
+      // Create next task with numbering
+      const nextTitle = `${parentTask.title.split('#')[0].trim()} #${instanceNumber}`;
+
+      const nextTask = {
+        id: generateUUID(),
+        title: nextTitle,
+        project: parentTask.project,
+        stage: parentTask.stage,
+        status: 'TO DO',
+        dueDate: nextDateStr,
+        notes: parentTask.notes,
+        priority: parentTask.priority,
+        recurrence: parentTask.recurrence,
+        recurrenceParentId: parentTask.id,
+        createdAt: new Date().toISOString(),
+        startedAt: null,
+        completedAt: null,
+        statusHistory: [{ status: 'TO DO', changedAt: new Date().toISOString() }],
+        order: app.tasks.length
+      };
+
+      app.tasks.push(nextTask);
+      return nextTask;
+    }
+
     function setTaskStatus(taskId, status) {
       const task = app.tasks.find(t => t.id === taskId);
       if (!task) return;
@@ -1448,6 +1585,10 @@
       }
       if (status === 'DONE' && !task.completedAt) {
         task.completedAt = new Date().toISOString();
+        // Auto-generate next recurring instance
+        if (task.recurrence && task.recurrence.type !== 'never') {
+          generateNextRecurringTask(task);
+        }
       }
       saveToStorage();
     }
@@ -2272,16 +2413,44 @@
       const title = document.getElementById('task-title').value;
       const project = document.getElementById('task-project').value;
       const dueDate = document.getElementById('task-date').value || getToday();
+      const recurrenceType = document.getElementById('task-recurrence').value;
+      const recurrence = { type: recurrenceType };
 
-      if (createTask(title, project, dueDate)) {
+      if (createTask(title, project, dueDate, recurrence)) {
+        // Clear form
         document.getElementById('task-title').value = '';
         document.getElementById('task-project').value = '';
         document.getElementById('task-date').value = getToday();
+        document.getElementById('task-recurrence').value = 'never';
+
+        // Collapse advanced section
+        document.getElementById('quickAddAdvanced').style.display = 'none';
+        document.getElementById('quickAddToggleAdvanced').textContent = '+ More';
+
         document.getElementById('task-title').focus();
         renderTasks();
         renderSummary();
       }
     });
+
+    // Quick add expandable toggle
+    document.getElementById('quickAddToggleAdvanced').addEventListener('click', () => {
+      const advanced = document.getElementById('quickAddAdvanced');
+      const toggle = document.getElementById('quickAddToggleAdvanced');
+
+      if (advanced.style.display === 'none') {
+        advanced.style.display = 'block';
+        toggle.textContent = '− Less';
+      } else {
+        advanced.style.display = 'none';
+        toggle.textContent = '+ More';
+      }
+    });
+
+    // Pre-fill date with today
+    if (!document.getElementById('task-date').value) {
+      document.getElementById('task-date').value = getToday();
+    }
 
     document.getElementById('task-date').addEventListener('focus', (e) => {
       if (!e.target.value) {
