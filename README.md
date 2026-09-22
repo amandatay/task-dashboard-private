@@ -32,9 +32,10 @@ A local HTML-based task management and project timeline dashboard designed for m
   - Sticky header for easy scrolling
 
 ### ⚙ SETTINGS Tab
+- **Data Management** — Export/import JSON backups for migration
 - **User Name** — Customize who is using the dashboard
-- **Projects** — Add/remove projects
-- **Statuses** — Add/remove custom statuses (defaults: TO DO, IN PROG, PENDING, DONE)
+- **Projects** — Add/remove/edit projects (edit inline, updates all tasks automatically)
+- **Statuses** — Add/remove/edit custom statuses (defaults: TO DO, IN PROG, PENDING, DONE)
 
 ## Color Scheme
 
@@ -56,13 +57,60 @@ All colors follow a **dark pixel aesthetic** with sage green accents:
 | `cmd/ctrl + w` | Toggle "working on" for first active task |
 | `cmd/ctrl + d` | Mark first active task as done |
 
-## Data Persistence
+## Data Persistence & Portability
 
+### Storage Architecture
 All data is stored in **localStorage** — your browser's local storage. No cloud sync, no external servers.
 
 - **Survives**: Browser refresh, system restart
 - **Does not survive**: Browser data clear, switching browsers/devices
-- **Backup**: Manually export tasks to JSON file if needed
+- **Portable**: Use export/import to transfer between devices
+
+### Export/Import (Backup & Migration)
+**Settings Tab** includes data management:
+
+#### Export Data
+- Click **📥 EXPORT DATA** button
+- Downloads `task-dashboard-backup-YYYY-MM-DD.json`
+- Contains: all tasks, projects, settings, timestamps, notes
+- Use this before upgrading to new dashboard versions
+- Keep backups for safety
+
+#### Import Data
+- Click **📤 IMPORT DATA** button
+- Select previously exported `.json` file
+- Restores all tasks, projects, settings
+- **Warning**: This overwrites current data (export first if needed)
+
+### Migration Path
+1. **Current version** → Export data
+2. **Update dashboard.html** to new version
+3. **Import data** in new version
+4. All details preserved, no data loss
+
+## Architecture
+
+### Single-File Design
+- **One HTML file** — No build step, no dependencies
+- **Self-contained** — All CSS, JavaScript, and HTML in one file
+- **Portable** — Copy/email/backup the single `dashboard.html` file
+- **Offline-first** — Works completely offline, no internet required
+
+### Data Flow
+```
+User Input → JavaScript State (app) → localStorage
+                ↓
+          Render UI Components
+                ↓
+          User sees changes immediately
+```
+
+### Why This Design?
+✅ **No version lock-in** — Export data anytime, import to any future version  
+✅ **Zero dependencies** — No npm, no CDN, no package management  
+✅ **Corporate-friendly** — Passes security reviews, no external calls  
+✅ **Future-proof** — Data lives in portable JSON files, not locked in  
+✅ **Simple upgrades** — Download new version, import old data, done  
 
 ## Data Model
 

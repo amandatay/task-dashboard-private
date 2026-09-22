@@ -836,6 +836,98 @@
       opacity: 0.8;
     }
 
+    .export-import-section {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-secondary);
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-secondary {
+      padding: 8px 12px;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-secondary);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--text-primary);
+      color: var(--text-primary);
+    }
+
+    .edit-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-secondary);
+      margin-bottom: 6px;
+      gap: 8px;
+    }
+
+    .edit-item input {
+      flex: 1;
+      padding: 4px;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-secondary);
+      color: var(--text-primary);
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+    }
+
+    .edit-item button {
+      padding: 4px 8px;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-secondary);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-size: 8px;
+      transition: all 0.2s;
+    }
+
+    .edit-item button:hover {
+      border-color: var(--text-primary);
+      color: var(--text-primary);
+    }
+
+    .import-status {
+      margin-top: 8px;
+      padding: 8px;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-secondary);
+      font-size: 9px;
+      color: var(--text-secondary);
+      display: none;
+    }
+
+    .import-status.show {
+      display: block;
+    }
+
+    .import-status.success {
+      border-color: #7aaa6a;
+      color: #7aaa6a;
+    }
+
+    .import-status.error {
+      border-color: #d4756a;
+      color: #d4756a;
+    }
+
     /* Keyboard shortcuts */
     .shortcuts {
       margin-top: 16px;
@@ -1031,6 +1123,19 @@
 
         <!-- SETTINGS TAB -->
         <div id="settings-view" class="tab-content">
+          <div class="export-import-section">
+            <div class="settings-section-title">Data Management</div>
+            <div style="font-size: 9px; color: var(--text-secondary); margin-bottom: 12px;">
+              Export your data to a JSON file for backup or migration to new versions. Always keep a backup!
+            </div>
+            <div class="button-row">
+              <button class="btn-secondary" id="export-data-btn">📥 EXPORT DATA</button>
+              <button class="btn-secondary" id="import-data-btn">📤 IMPORT DATA</button>
+            </div>
+            <input id="import-file-input" type="file" accept=".json" style="display: none;">
+            <div id="import-status" class="import-status"></div>
+          </div>
+
           <div class="settings-section">
             <div class="settings-section-title">User Settings</div>
             <div class="setting-item">
@@ -1041,7 +1146,7 @@
 
           <div class="settings-section">
             <div class="settings-section-title">Projects</div>
-            <div class="item-list" id="settings-projects-list"></div>
+            <div id="settings-projects-list"></div>
             <div class="add-item-row">
               <input id="add-project-input" type="text" placeholder="New project name...">
               <button id="add-project-btn">+ ADD</button>
@@ -1050,7 +1155,7 @@
 
           <div class="settings-section">
             <div class="settings-section-title">Statuses</div>
-            <div class="item-list" id="settings-statuses-list"></div>
+            <div id="settings-statuses-list"></div>
             <div class="add-item-row">
               <input id="add-status-input" type="text" placeholder="New status name...">
               <button id="add-status-btn">+ ADD</button>
@@ -1693,28 +1798,74 @@
 
       app.projects.forEach(project => {
         const item = document.createElement('div');
-        item.className = 'list-item';
+        item.className = 'edit-item';
+        item.setAttribute('data-project-id', project.id);
         item.innerHTML = `
-          <div class="list-item-name">${project.name}</div>
-          <button class="list-item-delete" data-project-id="${project.id}">×</button>
+          <input type="text" value="${project.name}" class="project-name-input" placeholder="Project name">
+          <button class="project-delete-btn">×</button>
         `;
         projectsList.appendChild(item);
       });
 
       app.settings.statuses.forEach(status => {
         const item = document.createElement('div');
-        item.className = 'list-item';
+        item.className = 'edit-item';
+        item.setAttribute('data-status-id', status.id);
         const isDefault = ['TO DO', 'IN PROG', 'PENDING', 'DONE'].includes(status.name);
         item.innerHTML = `
-          <div class="list-item-name">${status.name}</div>
-          ${!isDefault ? `<button class="list-item-delete" data-status-id="${status.id}">×</button>` : '<span style="width: 30px;"></span>'}
+          <input type="text" value="${status.name}" class="status-name-input" placeholder="Status name" ${isDefault ? 'disabled' : ''}>
+          ${!isDefault ? `<button class="status-delete-btn">×</button>` : '<span style="width: 30px;"></span>'}
         `;
         statusesList.appendChild(item);
       });
 
-      document.querySelectorAll('[data-project-id]').forEach(btn => {
+      document.querySelectorAll('.project-name-input').forEach(input => {
+        input.addEventListener('blur', (e) => {
+          const projectId = e.target.closest('.edit-item').getAttribute('data-project-id');
+          const newName = e.target.value;
+          if (newName && newName.trim()) {
+            const project = app.projects.find(p => p.id === projectId);
+            if (project) {
+              // Update all tasks that reference old name
+              const oldName = project.name;
+              app.tasks.forEach(task => {
+                if (task.project === oldName) {
+                  task.project = newName;
+                }
+              });
+              project.name = newName;
+              saveToStorage();
+              populateProjectDropdowns();
+            }
+          }
+        });
+      });
+
+      document.querySelectorAll('.status-name-input').forEach(input => {
+        input.addEventListener('blur', (e) => {
+          const statusId = e.target.closest('.edit-item').getAttribute('data-status-id');
+          const newName = e.target.value;
+          if (newName && newName.trim()) {
+            const status = app.settings.statuses.find(s => s.id === statusId);
+            if (status) {
+              const oldName = status.name;
+              // Update all tasks that reference old status
+              app.tasks.forEach(task => {
+                if (task.status === oldName) {
+                  task.status = newName;
+                }
+              });
+              status.name = newName;
+              saveToStorage();
+              renderTasks();
+            }
+          }
+        });
+      });
+
+      document.querySelectorAll('.project-delete-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-          const projectId = e.target.getAttribute('data-project-id');
+          const projectId = e.target.closest('.edit-item').getAttribute('data-project-id');
           if (confirm('Delete project?')) {
             deleteProject(projectId);
             renderSettings();
@@ -1723,9 +1874,9 @@
         });
       });
 
-      document.querySelectorAll('[data-status-id]').forEach(btn => {
+      document.querySelectorAll('.status-delete-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-          const statusId = e.target.getAttribute('data-status-id');
+          const statusId = e.target.closest('.edit-item').getAttribute('data-status-id');
           if (confirm('Delete status?')) {
             app.settings.statuses = app.settings.statuses.filter(s => s.id !== statusId);
             saveToStorage();
@@ -1753,6 +1904,72 @@
         option2.textContent = project.name;
         filterSelect.appendChild(option2);
       });
+    }
+
+    function exportData() {
+      const exportData = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        tasks: app.tasks,
+        projects: app.projects,
+        settings: app.settings
+      };
+
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0];
+      link.href = url;
+      link.download = `task-dashboard-backup-${dateStr}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function importData(file) {
+      const reader = new FileReader();
+      const statusEl = document.getElementById('import-status');
+
+      reader.onload = (e) => {
+        try {
+          const importedData = JSON.parse(e.target.result);
+
+          // Validate structure
+          if (!importedData.tasks || !importedData.projects || !importedData.settings) {
+            throw new Error('Invalid backup file format');
+          }
+
+          // Import data
+          app.tasks = importedData.tasks || [];
+          app.projects = importedData.projects || [];
+          app.settings = importedData.settings || {};
+
+          saveToStorage();
+          populateProjectDropdowns();
+          renderTasks();
+          renderSummary();
+
+          statusEl.classList.add('show', 'success');
+          statusEl.textContent = `✓ Data imported successfully (${app.tasks.length} tasks, ${app.projects.length} projects)`;
+
+          setTimeout(() => {
+            statusEl.classList.remove('show', 'success');
+          }, 5000);
+        } catch (error) {
+          statusEl.classList.add('show', 'error');
+          statusEl.textContent = `✗ Import failed: ${error.message}`;
+
+          setTimeout(() => {
+            statusEl.classList.remove('show', 'error');
+          }, 5000);
+        }
+      };
+
+      reader.readAsText(file);
     }
 
     function switchTab(tabName) {
@@ -1844,6 +2061,21 @@
     document.getElementById('filter-search').addEventListener('input', renderSummary);
     document.getElementById('filter-project').addEventListener('change', renderSummary);
     document.getElementById('filter-status').addEventListener('change', renderSummary);
+
+    // Export/Import
+    document.getElementById('export-data-btn').addEventListener('click', exportData);
+
+    document.getElementById('import-data-btn').addEventListener('click', () => {
+      document.getElementById('import-file-input').click();
+    });
+
+    document.getElementById('import-file-input').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        importData(file);
+        e.target.value = '';
+      }
+    });
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
