@@ -330,11 +330,80 @@
       white-space: nowrap;
     }
 
-    .task-notes-link {
+    .task-notes-control {
       cursor: pointer;
-      color: inherit;
-      text-decoration: underline;
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      user-select: none;
       font-size: 9px;
+      transition: opacity 0.2s;
+    }
+
+    .task-notes-control:hover {
+      opacity: 0.7;
+      text-decoration: underline;
+    }
+
+    .notes-icon {
+      font-weight: bold;
+      color: inherit;
+    }
+
+    .notes-chevron {
+      display: inline-block;
+      transition: transform 0.2s ease;
+      font-size: 9px;
+    }
+
+    .notes-chevron[data-expanded="false"] {
+      transform: rotate(-90deg);
+    }
+
+    .notes-chevron[data-expanded="true"] {
+      transform: rotate(0deg);
+    }
+
+    .task-notes-editor {
+      grid-column: 1 / -1;
+      margin-top: 8px;
+      padding: 8px;
+      background-color: var(--bg-input);
+      border: 1px solid;
+      border-color: inherit;
+      border-radius: 2px;
+    }
+
+    .notes-textarea {
+      width: 100%;
+      min-height: 60px;
+      padding: 6px;
+      background-color: var(--bg-card);
+      border: 1px solid;
+      border-color: inherit;
+      color: inherit;
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+      resize: vertical;
+      margin-bottom: 4px;
+    }
+
+    .notes-textarea:focus {
+      outline: none;
+      border: 1px solid var(--color-inprog);
+    }
+
+    .notes-feedback {
+      font-size: 9px;
+      text-align: right;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      color: #7aaa6a;
+      font-weight: bold;
+    }
+
+    .notes-feedback.show {
+      opacity: 1;
     }
 
     .task-button {
@@ -1221,6 +1290,7 @@
       projects: [],
       settings: {},
       draggedTaskId: null,
+      noteExpandedState: {},
     };
 
     // ===== STORAGE =====
@@ -1228,12 +1298,14 @@
       localStorage.setItem('tasks', JSON.stringify(app.tasks));
       localStorage.setItem('projects', JSON.stringify(app.projects));
       localStorage.setItem('settings', JSON.stringify(app.settings));
+      localStorage.setItem('noteExpandedState', JSON.stringify(app.noteExpandedState));
     }
 
     function loadFromStorage() {
       app.tasks = JSON.parse(localStorage.getItem('tasks')) || [];
       app.projects = JSON.parse(localStorage.getItem('projects')) || [];
       app.settings = JSON.parse(localStorage.getItem('settings')) || {};
+      app.noteExpandedState = JSON.parse(localStorage.getItem('noteExpandedState')) || {};
     }
 
     function initDefaults() {
@@ -1478,7 +1550,7 @@
             ${app.settings.statuses.map(s => `<option value="${s.name}" ${task.status === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
           </select>
           <div class="task-date">${formatDate(task.dueDate)}</div>
-          <div class="task-notes-link" data-task-id="${task.id}">notes ▼</div>
+          ${renderNotesControl(task)}
           <button class="task-button" data-task-id="${task.id}" data-action="toggle">${buttonText}</button>
           <button class="task-button" data-task-id="${task.id}" data-action="flag">🚩</button>
           <button class="task-delete" data-task-id="${task.id}" data-action="delete">×</button>
@@ -1486,13 +1558,20 @@
 
         activeContainer.appendChild(card);
 
-        if (task.notes) {
-          const notesDiv = document.createElement('div');
-          notesDiv.className = 'task-notes';
-          notesDiv.innerHTML = `
-            <textarea data-task-id="${task.id}" class="task-notes-textarea">${task.notes}</textarea>
+        if (app.noteExpandedState[task.id]) {
+          const notesEditor = document.createElement('div');
+          notesEditor.className = 'task-notes-editor';
+          notesEditor.setAttribute('data-task-id', task.id);
+          notesEditor.setAttribute('data-expanded', 'true');
+          notesEditor.innerHTML = `
+            <textarea
+              class="notes-textarea"
+              data-task-id="${task.id}"
+              placeholder="Add notes..."
+            >${task.notes || ''}</textarea>
+            <div class="notes-feedback"></div>
           `;
-          card.appendChild(notesDiv);
+          card.appendChild(notesEditor);
         }
       });
 
@@ -1512,7 +1591,7 @@
             ${app.settings.statuses.map(s => `<option value="${s.name}" ${task.status === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
           </select>
           <div class="task-date">${formatDate(task.dueDate)}</div>
-          <div class="task-notes-link" data-task-id="${task.id}">notes ▼</div>
+          ${renderNotesControl(task)}
           <button class="task-button" data-task-id="${task.id}" data-action="toggle">Start working</button>
           <button class="task-button" data-task-id="${task.id}" data-action="flag">🚩</button>
           <button class="task-delete" data-task-id="${task.id}" data-action="delete">×</button>
@@ -1520,18 +1599,72 @@
 
         doneContainer.appendChild(card);
 
-        if (task.notes) {
-          const notesDiv = document.createElement('div');
-          notesDiv.className = 'task-notes';
-          notesDiv.innerHTML = `
-            <textarea data-task-id="${task.id}" class="task-notes-textarea">${task.notes}</textarea>
+        if (app.noteExpandedState[task.id]) {
+          const notesEditor = document.createElement('div');
+          notesEditor.className = 'task-notes-editor';
+          notesEditor.setAttribute('data-task-id', task.id);
+          notesEditor.setAttribute('data-expanded', 'true');
+          notesEditor.innerHTML = `
+            <textarea
+              class="notes-textarea"
+              data-task-id="${task.id}"
+              placeholder="Add notes..."
+            >${task.notes || ''}</textarea>
+            <div class="notes-feedback"></div>
           `;
-          card.appendChild(notesDiv);
+          doneContainer.appendChild(notesEditor);
         }
       });
 
       attachTaskEventListeners();
       updateStats();
+    }
+
+    function renderNotesControl(task) {
+      const hasNotes = task.notes && task.notes.trim().length > 0;
+      const isExpanded = app.noteExpandedState[task.id] || false;
+      const icon = hasNotes ? '●' : '○';
+      const chevron = isExpanded ? '▼' : '▶';
+
+      return `
+        <div class="task-notes-control" data-task-id="${task.id}">
+          <span class="notes-icon">${icon}</span>
+          <span class="notes-chevron" data-expanded="${isExpanded}">${chevron}</span>
+          <span class="notes-label">notes</span>
+        </div>
+      `;
+    }
+
+    function toggleNotesExpanded(taskId) {
+      app.noteExpandedState[taskId] = !app.noteExpandedState[taskId];
+      saveToStorage();
+      renderTasks();
+    }
+
+    function saveNotesWithFeedback(taskId, noteText) {
+      const task = app.tasks.find(t => t.id === taskId);
+      if (task) {
+        task.notes = noteText.trim();
+        saveToStorage();
+
+        // Show feedback
+        const feedbackEl = document.querySelector(
+          `.task-notes-editor[data-task-id="${taskId}"] .notes-feedback`
+        );
+        if (feedbackEl) {
+          feedbackEl.classList.add('show');
+          feedbackEl.textContent = '✓ saved';
+          setTimeout(() => {
+            feedbackEl.classList.remove('show');
+          }, 1500);
+        }
+      }
+    }
+
+    function closeNotes(taskId) {
+      app.noteExpandedState[taskId] = false;
+      saveToStorage();
+      renderTasks();
     }
 
     function attachTaskEventListeners() {
@@ -1634,38 +1767,38 @@
         });
       });
 
-      // Notes link
-      document.querySelectorAll('.task-notes-link').forEach(link => {
-        link.addEventListener('click', (e) => {
-          const taskId = e.target.getAttribute('data-task-id');
-          const card = document.querySelector(`[data-task-id="${taskId}"]`);
-          const notesDiv = card.querySelector('.task-notes');
-
-          if (notesDiv) {
-            notesDiv.remove();
-          } else {
-            const task = app.tasks.find(t => t.id === taskId);
-            const newNotesDiv = document.createElement('div');
-            newNotesDiv.className = 'task-notes';
-            newNotesDiv.innerHTML = `
-              <textarea data-task-id="${taskId}" class="task-notes-textarea">${task.notes}</textarea>
-            `;
-            card.appendChild(newNotesDiv);
-            const textarea = newNotesDiv.querySelector('textarea');
-            textarea.addEventListener('blur', () => {
-              updateTaskNotes(taskId, textarea.value);
-            });
-            textarea.focus();
-          }
+      // Notes control click
+      document.querySelectorAll('.task-notes-control').forEach(control => {
+        control.addEventListener('click', (e) => {
+          const taskId = control.getAttribute('data-task-id');
+          toggleNotesExpanded(taskId);
         });
       });
 
-      // Notes textarea
-      document.querySelectorAll('.task-notes-textarea').forEach(textarea => {
-        textarea.addEventListener('blur', () => {
-          const taskId = textarea.getAttribute('data-task-id');
-          updateTaskNotes(taskId, textarea.value);
+      // Notes textarea events
+      document.querySelectorAll('.notes-textarea').forEach(textarea => {
+        textarea.addEventListener('blur', (e) => {
+          const taskId = e.target.getAttribute('data-task-id');
+          const noteText = e.target.value;
+          saveNotesWithFeedback(taskId, noteText);
+          setTimeout(() => closeNotes(taskId), 1500);
         });
+
+        textarea.addEventListener('keydown', (e) => {
+          const taskId = e.target.getAttribute('data-task-id');
+          const noteText = e.target.value;
+
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            closeNotes(taskId);
+          } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            saveNotesWithFeedback(taskId, noteText);
+            setTimeout(() => closeNotes(taskId), 1500);
+          }
+        });
+
+        textarea.focus();
       });
     }
 
