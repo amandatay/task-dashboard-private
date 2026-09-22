@@ -1889,7 +1889,7 @@
               <select id="task-project" class="quick-add-input">
                 <option value="">Select project</option>
               </select>
-              <input id="task-date" type="date" placeholder="DD MMM YYYY" class="quick-add-input" readonly>
+              <input id="task-date" type="date" placeholder="DD MMM YYYY" class="quick-add-input">
               <button id="quickAddToggleAdvanced" class="quick-add-toggle">+ More</button>
               <button id="add-task-btn" style="padding: 8px 12px; background-color: #7aaa6a; border: 1px solid #7aaa6a; color: white; cursor: pointer; font-family: 'Courier New', monospace; font-size: 9px; font-weight: bold; text-transform: uppercase;">ADD</button>
             </div>
@@ -3005,14 +3005,15 @@
 
       app.projects.forEach(project => {
         const btn = document.createElement('button');
-        btn.className = `nav-tab ${app.selectedKanbanProject === project.name ? 'active' : ''}`;
+        const isActive = app.selectedKanbanProject === project.name;
+        btn.className = `nav-tab ${isActive ? 'active' : ''}`;
         btn.textContent = project.name;
         btn.style.padding = '6px 12px';
         btn.style.fontSize = '9px';
         btn.style.fontWeight = 'bold';
         btn.style.textTransform = 'uppercase';
-        btn.style.border = `1px solid ${app.selectedKanbanProject === project.name ? 'var(--color-todo)' : 'var(--border-secondary)'}`;
-        btn.style.background = 'transparent';
+        btn.style.border = `1px solid ${isActive ? 'var(--color-todo)' : 'var(--border-secondary)'}`;
+        btn.style.background = isActive ? 'rgba(166, 176, 138, 0.1)' : 'transparent';
         btn.style.color = 'var(--text-primary)';
         btn.style.cursor = 'pointer';
         btn.style.borderRadius = '2px';
@@ -3020,6 +3021,7 @@
 
         btn.addEventListener('click', () => {
           app.selectedKanbanProject = project.name;
+          renderKanbanProjectSelector();
           renderKanbanBoard();
         });
 
