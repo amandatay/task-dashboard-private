@@ -445,6 +445,21 @@
       color: var(--bg-dark);
     }
 
+    .recurrence-badge {
+      display: inline-block;
+      font-size: 7px;
+      color: var(--text-secondary);
+      margin-left: 4px;
+      white-space: nowrap;
+      font-weight: normal;
+      opacity: 0.8;
+    }
+
+    .recurrence-badge:hover {
+      opacity: 1;
+      color: var(--text-primary);
+    }
+
     .task-delete {
       padding: 4px 6px;
       background-color: var(--bg-input);
@@ -1247,6 +1262,490 @@
         grid-auto-flow: dense;
       }
     }
+
+    /* Project Sections (Phase 2) */
+    .project-section {
+      margin-bottom: 16px;
+      border: 1px solid var(--border-secondary);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .project-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background-color: var(--bg-card);
+      border-bottom: 1px solid var(--border-secondary);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .project-header:hover {
+      background-color: rgba(166, 176, 138, 0.1);
+    }
+
+    .project-toggle {
+      display: inline-block;
+      font-size: 10px;
+      width: 14px;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+
+    .project-toggle.collapsed {
+      transform: rotate(-90deg);
+    }
+
+    .project-name {
+      flex: 1;
+      font-weight: bold;
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+
+    .project-count {
+      font-size: 8px;
+      color: var(--text-secondary);
+      padding: 2px 6px;
+      background-color: var(--bg-input);
+      border-radius: 2px;
+    }
+
+    .project-tasks {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px;
+      background-color: var(--bg-dark);
+      max-height: 500px;
+      overflow-y: auto;
+      transition: max-height 0.3s ease;
+    }
+
+    .project-tasks.collapsed {
+      max-height: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .done-section-by-project {
+      margin-top: 20px;
+      border-top: 2px solid var(--border-secondary);
+      padding-top: 12px;
+    }
+
+    /* Kanban Board (Phase 3) */
+    .kanban-board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      padding: 12px;
+      height: 100%;
+      overflow: auto;
+    }
+
+    .kanban-column {
+      display: flex;
+      flex-direction: column;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-secondary);
+      border-radius: 2px;
+      min-height: 400px;
+      max-height: calc(100vh - 120px);
+    }
+
+    .kanban-column-header {
+      padding: 10px;
+      border-bottom: 1px solid var(--border-secondary);
+      font-weight: bold;
+      font-size: 10px;
+      text-transform: uppercase;
+      background-color: rgba(0, 0, 0, 0.2);
+      color: var(--text-primary);
+    }
+
+    .kanban-column-count {
+      font-size: 8px;
+      color: var(--text-secondary);
+      margin-left: auto;
+    }
+
+    .kanban-tasks {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background-color: var(--bg-dark);
+    }
+
+    .kanban-task-card {
+      padding: 10px;
+      background-color: var(--bg-card);
+      border: 2px solid var(--border-default);
+      border-radius: 2px;
+      cursor: grab;
+      user-select: none;
+      transition: all 0.2s;
+    }
+
+    .kanban-task-card:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+
+    .kanban-task-card.dragging {
+      opacity: 0.5;
+      cursor: grabbing;
+    }
+
+    .kanban-task-title {
+      font-size: 9px;
+      font-weight: bold;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      word-break: break-word;
+    }
+
+    .kanban-task-meta {
+      font-size: 8px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .kanban-task-date {
+      font-size: 8px;
+      color: var(--text-muted);
+    }
+
+    .kanban-task-card.todo {
+      border-color: #6a7a5a;
+    }
+
+    .kanban-task-card.inprog {
+      border-color: #c9b8e4;
+    }
+
+    .kanban-task-card.pending {
+      border-color: #e4c5d8;
+    }
+
+    .kanban-task-card.done {
+      border-color: #5a6a4a;
+      opacity: 0.7;
+    }
+
+    .kanban-task-card.flagged {
+      border-color: #e8ddb8;
+      background-color: rgba(232, 221, 184, 0.1);
+    }
+
+    /* Task Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-secondary);
+      border-radius: 2px;
+      padding: 20px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-secondary);
+    }
+
+    .modal-title {
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+
+    .modal-close {
+      font-size: 16px;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 0;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close:hover {
+      color: var(--text-primary);
+    }
+
+    .modal-field {
+      margin-bottom: 12px;
+    }
+
+    .modal-field-label {
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .modal-field-value {
+      font-size: 10px;
+      color: var(--text-primary);
+      padding: 6px 8px;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-secondary);
+      border-radius: 2px;
+    }
+
+    .modal-field select,
+    .modal-field textarea {
+      width: 100%;
+      padding: 6px 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+      background-color: var(--bg-input);
+      color: var(--text-primary);
+      border: 1px solid var(--border-secondary);
+      border-radius: 2px;
+      resize: vertical;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-secondary);
+    }
+
+    .modal-actions button {
+      flex: 1;
+      padding: 8px;
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      border: 1px solid var(--border-secondary);
+      background-color: var(--bg-input);
+      color: var(--text-primary);
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.2s;
+    }
+
+    .modal-actions button:hover {
+      background-color: rgba(166, 176, 138, 0.1);
+    }
+
+    .modal-actions button.primary {
+      background-color: #7aaa6a;
+      border-color: #7aaa6a;
+      color: white;
+    }
+
+    .modal-actions button.primary:hover {
+      background-color: #6a9a5a;
+    }
+
+    /* Calendar View (Phase 4) */
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid var(--border-secondary);
+    }
+
+    .calendar-nav {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .calendar-nav button {
+      padding: 6px 10px;
+      font-size: 9px;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-secondary);
+      color: var(--text-primary);
+      cursor: pointer;
+      border-radius: 2px;
+    }
+
+    .calendar-nav button:hover {
+      background-color: rgba(166, 176, 138, 0.1);
+    }
+
+    .calendar-month-title {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: var(--text-primary);
+      min-width: 150px;
+      text-align: center;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      padding: 12px;
+      background-color: var(--border-secondary);
+      height: calc(100% - 60px);
+    }
+
+    .calendar-weekday {
+      background-color: var(--bg-card);
+      padding: 8px;
+      text-align: center;
+      font-size: 8px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-secondary);
+    }
+
+    .calendar-day {
+      background-color: var(--bg-card);
+      padding: 8px;
+      border: 1px solid var(--border-secondary);
+      min-height: 100px;
+      overflow-y: auto;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .calendar-day:hover {
+      background-color: rgba(166, 176, 138, 0.05);
+    }
+
+    .calendar-day.other-month {
+      opacity: 0.3;
+      background-color: var(--bg-input);
+    }
+
+    .calendar-day.today {
+      border: 2px solid var(--color-todo);
+      background-color: rgba(166, 176, 138, 0.15);
+    }
+
+    .calendar-day-number {
+      font-size: 9px;
+      font-weight: bold;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .calendar-meeting {
+      font-size: 7px;
+      padding: 2px 4px;
+      margin-bottom: 2px;
+      background-color: var(--color-inprog);
+      color: var(--text-inprog);
+      border-radius: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+
+    .calendar-meeting:hover {
+      opacity: 0.8;
+    }
+
+    .calendar-meeting.past {
+      opacity: 0.5;
+    }
+
+    /* Sidebar Calendar Widget */
+    .sidebar-calendar-widget {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-secondary);
+    }
+
+    .calendar-widget-title {
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .calendar-widget-date {
+      font-size: 8px;
+      color: var(--text-primary);
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .calendar-widget-meeting {
+      font-size: 8px;
+      padding: 4px 6px;
+      margin-bottom: 4px;
+      background-color: rgba(166, 176, 138, 0.2);
+      border-left: 2px solid var(--color-todo);
+      color: var(--text-primary);
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.2s;
+    }
+
+    .calendar-widget-meeting:hover {
+      background-color: rgba(166, 176, 138, 0.3);
+    }
+
+    .calendar-widget-meeting.priority {
+      background-color: rgba(201, 184, 228, 0.2);
+      border-left-color: var(--color-inprog);
+    }
+
+    .calendar-widget-meeting.priority:hover {
+      background-color: rgba(201, 184, 228, 0.4);
+    }
+
+    .calendar-widget-time {
+      font-size: 7px;
+      color: var(--text-secondary);
+      display: block;
+    }
+
+    .calendar-widget-empty {
+      font-size: 8px;
+      color: var(--text-muted);
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
@@ -1256,10 +1755,16 @@
       <div class="nav-tabs">
         <button class="nav-tab active" data-tab="list">LIST</button>
         <button class="nav-tab" data-tab="kanban">KANBAN</button>
-        <button class="nav-tab" data-tab="timeline">Timeline</button>
-        <button class="nav-tab" data-tab="summary">Summary</button>
-        <button class="nav-tab" data-tab="settings">Settings</button>
+        <button class="nav-tab" data-tab="timeline">TIMELINE</button>
+        <button class="nav-tab" data-tab="calendar">CALENDAR</button>
+        <button class="nav-tab" data-tab="summary">SUMMARY</button>
+        <button class="nav-tab" data-tab="settings">SETTINGS</button>
       </div>
+
+      <div class="sidebar-calendar-widget" id="sidebar-calendar-widget">
+        <!-- Calendar widget content will be rendered here -->
+      </div>
+
       <div class="sidebar-stats">
         <div class="stat-item">User: <strong id="sidebar-user">Amanda</strong></div>
         <div class="stat-item">Total: <strong id="stat-total">0</strong></div>
@@ -1419,10 +1924,116 @@
 
         <!-- KANBAN TAB -->
         <div id="kanban-view" class="tab-content" style="display: none;">
-          <div style="padding: 16px; text-align: center; color: var(--text-secondary);">
-            <p style="font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 12px;">Kanban View</p>
-            <p style="font-size: 9px;">Coming in Phase 3...</p>
-            <p style="font-size: 9px; margin-top: 12px; color: var(--text-muted);">4-column board view by project</p>
+          <div class="kanban-project-selector" id="kanban-project-selector" style="padding: 12px; border-bottom: 1px solid var(--border-secondary); display: flex; gap: 8px; flex-wrap: wrap;"></div>
+          <div class="kanban-board" id="kanban-board">
+            <!-- Columns will be generated here -->
+          </div>
+        </div>
+
+        <!-- CALENDAR TAB -->
+        <div id="calendar-view" class="tab-content" style="display: none;">
+          <div class="calendar-grid" id="calendar-grid">
+            <!-- Weekly view will be rendered here -->
+          </div>
+        </div>
+
+        <!-- TASK MODAL -->
+        <div class="modal-overlay" id="taskModal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <div class="modal-title">TASK DETAILS</div>
+              <button class="modal-close" id="modalClose">×</button>
+            </div>
+
+            <div class="modal-field">
+              <label class="modal-field-label">Title</label>
+              <input type="text" id="modalTaskTitle" class="modal-field-value" style="width: 100%; padding: 6px 8px; font-family: 'Courier New', monospace; font-size: 9px; background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-secondary); border-radius: 2px;">
+            </div>
+
+            <div class="modal-field">
+              <label class="modal-field-label">Project</label>
+              <select id="modalTaskProject" class="modal-field-value" style="width: 100%; padding: 6px 8px; font-family: 'Courier New', monospace; font-size: 9px; background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-secondary); border-radius: 2px;">
+              </select>
+            </div>
+
+            <div class="modal-field">
+              <label class="modal-field-label">Status</label>
+              <select id="modalTaskStatus" class="modal-field-value" style="width: 100%; padding: 6px 8px; font-family: 'Courier New', monospace; font-size: 9px; background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-secondary); border-radius: 2px;">
+              </select>
+            </div>
+
+            <div class="modal-field">
+              <label class="modal-field-label">Due Date</label>
+              <input type="date" id="modalTaskDate" class="modal-field-value" style="width: 100%; padding: 6px 8px; font-family: 'Courier New', monospace; font-size: 9px; background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-secondary); border-radius: 2px;">
+            </div>
+
+            <div class="modal-field">
+              <label class="modal-field-label">Notes</label>
+              <textarea id="modalTaskNotes" class="modal-field-value" style="width: 100%; padding: 6px 8px; font-family: 'Courier New', monospace; font-size: 9px; background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-secondary); border-radius: 2px; resize: vertical; min-height: 80px;" placeholder="Add notes..."></textarea>
+            </div>
+
+            <div class="modal-field">
+              <label class="modal-field-label">Recurrence</label>
+              <div class="modal-field-value" id="modalTaskRecurrence" style="padding: 6px 8px;">Never</div>
+            </div>
+
+            <div class="modal-actions">
+              <button id="modalFlagBtn">🚩 FLAG</button>
+              <button id="modalDeleteBtn">DELETE</button>
+              <button id="modalSaveBtn" class="primary">SAVE</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MEETING MODAL -->
+        <div class="modal-overlay" id="meetingModal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <div class="modal-title">MEETING</div>
+              <button class="modal-close" id="modalMeetingClose">×</button>
+            </div>
+
+            <div class="modal-field">
+              <label class="modal-field-label">Title</label>
+              <input type="text" id="modalMeetingTitle" class="modal-field-value" style="width: 100%; padding: 6px 8px; font-family: 'Courier New', monospace; font-size: 9px; background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-secondary); border-radius: 2px;">
+            </div>
+
+            <div class="modal-field">
+              <label class="modal-field-label">Date</label>
+              <input type="date" id="modalMeetingDate" class="modal-field-value" style="width: 100%; padding: 6px 8px; font-family: 'Courier New', monospace; font-size: 9px; background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-secondary); border-radius: 2px;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div class="modal-field">
+                <label class="modal-field-label">Time</label>
+                <input type="time" id="modalMeetingTime" class="modal-field-value" style="width: 100%; padding: 6px 8px; font-family: 'Courier New', monospace; font-size: 9px; background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-secondary); border-radius: 2px;">
+              </div>
+              <div class="modal-field">
+                <label class="modal-field-label">Duration (min)</label>
+                <input type="number" id="modalMeetingDuration" class="modal-field-value" style="width: 100%; padding: 6px 8px; font-family: 'Courier New', monospace; font-size: 9px; background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-secondary); border-radius: 2px;" value="60" min="15" step="15">
+              </div>
+            </div>
+
+            <div class="modal-field">
+              <label class="modal-field-label">Project</label>
+              <select id="modalMeetingProject" class="modal-field-value" style="width: 100%; padding: 6px 8px; font-family: 'Courier New', monospace; font-size: 9px; background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-secondary); border-radius: 2px;">
+              </select>
+            </div>
+
+            <div class="modal-field" style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="modalMeetingPriority" style="width: 16px; height: 16px; cursor: pointer;">
+              <label for="modalMeetingPriority" class="modal-field-label" style="margin-bottom: 0;">★ Priority Meeting</label>
+            </div>
+
+            <div class="modal-field">
+              <label class="modal-field-label">Notes</label>
+              <textarea id="modalMeetingNotes" class="modal-field-value" style="width: 100%; padding: 6px 8px; font-family: 'Courier New', monospace; font-size: 9px; background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-secondary); border-radius: 2px; resize: vertical; min-height: 60px;" placeholder="Add notes..."></textarea>
+            </div>
+
+            <div class="modal-actions">
+              <button id="modalMeetingDelete">DELETE</button>
+              <button id="modalMeetingSave" class="primary">SAVE</button>
+            </div>
           </div>
         </div>
 
@@ -1576,25 +2187,33 @@
     const app = {
       currentTab: 'tasks',
       tasks: [],
+      meetings: [],
       projects: [],
       settings: {},
       draggedTaskId: null,
       noteExpandedState: {},
+      projectExpandedState: {},
+      selectedKanbanProject: null,
+      currentCalendarDate: new Date(),
     };
 
     // ===== STORAGE =====
     function saveToStorage() {
       localStorage.setItem('tasks', JSON.stringify(app.tasks));
+      localStorage.setItem('meetings', JSON.stringify(app.meetings));
       localStorage.setItem('projects', JSON.stringify(app.projects));
       localStorage.setItem('settings', JSON.stringify(app.settings));
       localStorage.setItem('noteExpandedState', JSON.stringify(app.noteExpandedState));
+      localStorage.setItem('projectExpandedState', JSON.stringify(app.projectExpandedState));
     }
 
     function loadFromStorage() {
       app.tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+      app.meetings = JSON.parse(localStorage.getItem('meetings')) || [];
       app.projects = JSON.parse(localStorage.getItem('projects')) || [];
       app.settings = JSON.parse(localStorage.getItem('settings')) || {};
       app.noteExpandedState = JSON.parse(localStorage.getItem('noteExpandedState')) || {};
+      app.projectExpandedState = JSON.parse(localStorage.getItem('projectExpandedState')) || {};
     }
 
     function initDefaults() {
@@ -1873,113 +2492,201 @@
         activeContainer.innerHTML = '';
         doneContainer.innerHTML = '';
 
+        // Initialize project expanded state if needed
+        if (!app.projectExpandedState) {
+          app.projectExpandedState = {};
+        }
+
         const activeTasks = app.tasks.filter(t => t.status !== 'DONE').sort((a, b) => a.order - b.order);
         const doneTasks = app.tasks.filter(t => t.status === 'DONE');
 
-        document.getElementById('done-count').textContent = doneTasks.length;
-
+        // Group active tasks by project
+        const tasksByProject = {};
         activeTasks.forEach(task => {
-          const cardClass = getTaskCardClass(task);
-          const card = document.createElement('div');
-          card.className = `task-card ${cardClass}`;
-          card.setAttribute('data-task-id', task.id);
+          if (!tasksByProject[task.project]) {
+            tasksByProject[task.project] = [];
+          }
+          tasksByProject[task.project].push(task);
+        });
 
-          const buttonText = task.status === 'TO DO' ? 'Start working' : task.status === 'IN PROG' ? 'Done' : 'Start working';
-
-          card.innerHTML = `
-            <div class="drag-handle" draggable="true">⋮⋮</div>
-            <div>
-              <div class="task-title">${task.title}</div>
-              <div class="task-meta">${task.project}${task.stage ? ' → ' + task.stage : ''}</div>
-            </div>
-            <select class="task-status" data-task-id="${task.id}">
-              ${app.settings.statuses.map(s => `<option value="${s.name}" ${task.status === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
-            </select>
-            <div class="task-date">${formatDate(task.dueDate)}</div>
-            ${renderNotesControl(task)}
-            <button class="task-button" data-task-id="${task.id}" data-action="toggle">${buttonText}</button>
-            <button class="task-button" data-task-id="${task.id}" data-action="flag">🚩</button>
-            <button class="task-delete" data-task-id="${task.id}" data-action="delete">×</button>
-          `;
-
-          activeContainer.appendChild(card);
-
-          if (app.noteExpandedState[task.id]) {
-            const notesEditor = document.createElement('div');
-            notesEditor.className = 'task-notes-editor';
-            notesEditor.setAttribute('data-task-id', task.id);
-            notesEditor.setAttribute('data-expanded', 'true');
-            notesEditor.innerHTML = `
-              <textarea
-                class="notes-textarea"
-                data-task-id="${task.id}"
-                placeholder="Add notes..."
-              >${task.notes || ''}</textarea>
-              <div style="display: flex; gap: 8px; margin-top: 6px;">
-                <button class="notes-save-btn" data-task-id="${task.id}">SAVE</button>
-                <button class="notes-close-btn" data-task-id="${task.id}">CLOSE</button>
-                <div class="notes-feedback" style="margin-left: auto;"></div>
-              </div>
-            `;
-            card.appendChild(notesEditor);
+        // Initialize project expanded state for new projects
+        Object.keys(tasksByProject).forEach(project => {
+          if (!(project in app.projectExpandedState)) {
+            app.projectExpandedState[project] = true;
           }
         });
 
-      doneTasks.forEach(task => {
-        try {
-          const cardClass = getTaskCardClass(task);
-          const card = document.createElement('div');
-          card.className = `task-card ${cardClass}`;
-          card.setAttribute('data-task-id', task.id);
+        // Render active tasks grouped by project
+        Object.keys(tasksByProject).sort().forEach(project => {
+          const projectTasks = tasksByProject[project];
+          const isExpanded = app.projectExpandedState[project] !== false;
 
-          card.innerHTML = `
-            <div class="drag-handle" draggable="true">⋮⋮</div>
-            <div>
-              <div class="task-title">${task.title}</div>
-              <div class="task-meta">${task.project}${task.stage ? ' → ' + task.stage : ''}</div>
-            </div>
-            <select class="task-status" data-task-id="${task.id}">
-              ${app.settings.statuses.map(s => `<option value="${s.name}" ${task.status === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
-            </select>
-            <div class="task-date">${formatDate(task.dueDate)}</div>
-            ${renderNotesControl(task)}
-            <button class="task-button" data-task-id="${task.id}" data-action="toggle">Start working</button>
-            <button class="task-button" data-task-id="${task.id}" data-action="flag">🚩</button>
-            <button class="task-delete" data-task-id="${task.id}" data-action="delete">×</button>
+          // Project section
+          const section = document.createElement('div');
+          section.className = 'project-section';
+
+          // Project header
+          const header = document.createElement('div');
+          header.className = 'project-header';
+          header.innerHTML = `
+            <span class="project-toggle ${!isExpanded ? 'collapsed' : ''}">▼</span>
+            <span class="project-name">${project}</span>
+            <span class="project-count">${projectTasks.length}</span>
           `;
+          header.addEventListener('click', () => {
+            app.projectExpandedState[project] = !app.projectExpandedState[project];
+            renderTasks();
+          });
 
-          doneContainer.appendChild(card);
+          section.appendChild(header);
 
-          if (app.noteExpandedState[task.id]) {
-            const notesEditor = document.createElement('div');
-            notesEditor.className = 'task-notes-editor';
-            notesEditor.setAttribute('data-task-id', task.id);
-            notesEditor.setAttribute('data-expanded', 'true');
-            notesEditor.innerHTML = `
-              <textarea
-                class="notes-textarea"
-                data-task-id="${task.id}"
-                placeholder="Add notes..."
-              >${task.notes || ''}</textarea>
-              <div style="display: flex; gap: 8px; margin-top: 6px;">
-                <button class="notes-save-btn" data-task-id="${task.id}">SAVE</button>
-                <button class="notes-close-btn" data-task-id="${task.id}">CLOSE</button>
-                <div class="notes-feedback" style="margin-left: auto;"></div>
+          // Project tasks container
+          const tasksContainer = document.createElement('div');
+          tasksContainer.className = `project-tasks ${!isExpanded ? 'collapsed' : ''}`;
+
+          projectTasks.forEach(task => {
+            const cardClass = getTaskCardClass(task);
+            const card = document.createElement('div');
+            card.className = `task-card ${cardClass}`;
+            card.setAttribute('data-task-id', task.id);
+
+            const buttonText = task.status === 'TO DO' ? 'Start working' : task.status === 'IN PROG' ? 'Done' : 'Start working';
+
+            card.innerHTML = `
+              <div class="drag-handle" draggable="true">⋮⋮</div>
+              <div>
+                <div class="task-title">${getRecurrenceDisplay(task)} ${task.title}</div>
+                <div class="task-meta">${task.project}${task.stage ? ' → ' + task.stage : ''}</div>
               </div>
+              <select class="task-status" data-task-id="${task.id}">
+                ${app.settings.statuses.map(s => `<option value="${s.name}" ${task.status === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
+              </select>
+              <div class="task-date">${formatDate(task.dueDate)}</div>
+              ${renderNotesControl(task)}
+              <button class="task-button" data-task-id="${task.id}" data-action="toggle">${buttonText}</button>
+              <button class="task-button" data-task-id="${task.id}" data-action="flag">🚩</button>
+              <button class="task-delete" data-task-id="${task.id}" data-action="delete">×</button>
             `;
-            card.appendChild(notesEditor);
-          }
-        } catch (error) {
-          console.error('Error rendering done task:', error);
-        }
-      });
 
+            tasksContainer.appendChild(card);
+
+            if (app.noteExpandedState[task.id]) {
+              const notesEditor = document.createElement('div');
+              notesEditor.className = 'task-notes-editor';
+              notesEditor.setAttribute('data-task-id', task.id);
+              notesEditor.setAttribute('data-expanded', 'true');
+              notesEditor.innerHTML = `
+                <textarea
+                  class="notes-textarea"
+                  data-task-id="${task.id}"
+                  placeholder="Add notes..."
+                >${task.notes || ''}</textarea>
+                <div style="display: flex; gap: 8px; margin-top: 6px;">
+                  <button class="notes-save-btn" data-task-id="${task.id}">SAVE</button>
+                  <button class="notes-close-btn" data-task-id="${task.id}">CLOSE</button>
+                  <div class="notes-feedback" style="margin-left: auto;"></div>
+                </div>
+              `;
+              card.appendChild(notesEditor);
+            }
+          });
+
+          section.appendChild(tasksContainer);
+          activeContainer.appendChild(section);
+        });
+
+        // Render done section
+        if (doneTasks.length > 0) {
+          const doneSection = document.createElement('div');
+          doneSection.className = 'done-section-by-project';
+          doneSection.innerHTML = '<div style="font-weight: bold; color: var(--text-secondary); margin-bottom: 8px;">DONE</div>';
+
+          doneTasks.forEach(task => {
+            try {
+              const cardClass = getTaskCardClass(task);
+              const card = document.createElement('div');
+              card.className = `task-card ${cardClass}`;
+              card.setAttribute('data-task-id', task.id);
+
+              card.innerHTML = `
+                <div class="drag-handle" draggable="true">⋮⋮</div>
+                <div>
+                  <div class="task-title">${getRecurrenceDisplay(task)} ${task.title}</div>
+                  <div class="task-meta">${task.project}${task.stage ? ' → ' + task.stage : ''}</div>
+                </div>
+                <select class="task-status" data-task-id="${task.id}">
+                  ${app.settings.statuses.map(s => `<option value="${s.name}" ${task.status === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
+                </select>
+                <div class="task-date">${formatDate(task.dueDate)}</div>
+                ${renderNotesControl(task)}
+                <button class="task-button" data-task-id="${task.id}" data-action="toggle">Start working</button>
+                <button class="task-button" data-task-id="${task.id}" data-action="flag">🚩</button>
+                <button class="task-delete" data-task-id="${task.id}" data-action="delete">×</button>
+              `;
+
+              doneSection.appendChild(card);
+
+              if (app.noteExpandedState[task.id]) {
+                const notesEditor = document.createElement('div');
+                notesEditor.className = 'task-notes-editor';
+                notesEditor.setAttribute('data-task-id', task.id);
+                notesEditor.setAttribute('data-expanded', 'true');
+                notesEditor.innerHTML = `
+                  <textarea
+                    class="notes-textarea"
+                    data-task-id="${task.id}"
+                    placeholder="Add notes..."
+                  >${task.notes || ''}</textarea>
+                  <div style="display: flex; gap: 8px; margin-top: 6px;">
+                    <button class="notes-save-btn" data-task-id="${task.id}">SAVE</button>
+                    <button class="notes-close-btn" data-task-id="${task.id}">CLOSE</button>
+                    <div class="notes-feedback" style="margin-left: auto;"></div>
+                  </div>
+                `;
+                card.appendChild(notesEditor);
+              }
+            } catch (error) {
+              console.error('Error rendering done task:', error);
+            }
+          });
+
+          activeContainer.appendChild(doneSection);
+        }
+
+        document.getElementById('done-count').textContent = doneTasks.length;
         attachTaskEventListeners();
         updateStats();
       } catch (error) {
         console.error('Fatal error in renderTasks:', error);
         console.error('Stack:', error.stack);
       }
+    }
+
+    function getRecurrenceDisplay(task) {
+      if (!task.recurrence || task.recurrence.type === 'never') return '';
+
+      let displayText = '';
+
+      if (task.recurrence.type === 'daily') {
+        displayText = 'Daily';
+      } else if (task.recurrence.type === 'weekly') {
+        const dayMap = {
+          mon: 'M', tue: 'T', wed: 'W', thu: 'Th',
+          fri: 'F', sat: 'Sa', sun: 'Su'
+        };
+        const days = (task.recurrence.daysOfWeek || []).map(d => dayMap[d]).join(',');
+        displayText = `Weekly (${days})`;
+      } else if (task.recurrence.type === 'monthly') {
+        if (task.recurrence.monthlyType === 'date') {
+          displayText = `Monthly (${task.recurrence.dateOfMonth})`;
+        } else if (task.recurrence.monthlyType === 'weekday') {
+          const ordinal = task.recurrence.ordinal;
+          const weekday = task.recurrence.weekday.substring(0, 3);
+          displayText = `Monthly (${ordinal} ${weekday})`;
+        }
+      }
+
+      return displayText ? `<span class="recurrence-badge" title="${displayText}">【┘】${displayText}</span>` : '';
     }
 
     function renderNotesControl(task) {
@@ -2027,6 +2734,487 @@
       app.noteExpandedState[taskId] = false;
       saveToStorage();
       renderTasks();
+    }
+
+    function renderKanbanView() {
+      // Initialize selected project
+      if (!app.selectedKanbanProject) {
+        app.selectedKanbanProject = app.projects.length > 0 ? app.projects[0].name : 'PROJECT_1';
+      }
+
+      renderKanbanProjectSelector();
+      renderKanbanBoard();
+    }
+
+    function renderKanbanProjectSelector() {
+      const selector = document.getElementById('kanban-project-selector');
+      selector.innerHTML = '';
+
+      app.projects.forEach(project => {
+        const btn = document.createElement('button');
+        btn.className = `nav-tab ${app.selectedKanbanProject === project.name ? 'active' : ''}`;
+        btn.textContent = project.name;
+        btn.style.padding = '6px 12px';
+        btn.style.fontSize = '9px';
+        btn.style.fontWeight = 'bold';
+        btn.style.textTransform = 'uppercase';
+        btn.style.border = `1px solid ${app.selectedKanbanProject === project.name ? 'var(--color-todo)' : 'var(--border-secondary)'}`;
+        btn.style.background = 'transparent';
+        btn.style.color = 'var(--text-primary)';
+        btn.style.cursor = 'pointer';
+        btn.style.borderRadius = '2px';
+        btn.style.transition = 'all 0.2s';
+
+        btn.addEventListener('click', () => {
+          app.selectedKanbanProject = project.name;
+          renderKanbanBoard();
+        });
+
+        selector.appendChild(btn);
+      });
+    }
+
+    function renderKanbanBoard() {
+      const board = document.getElementById('kanban-board');
+      board.innerHTML = '';
+
+      const statuses = app.settings.statuses.map(s => s.name);
+      const tasksByStatus = {};
+
+      // Filter tasks by selected project
+      statuses.forEach(status => {
+        tasksByStatus[status] = app.tasks
+          .filter(t => t.status === status && t.project === app.selectedKanbanProject)
+          .sort((a, b) => a.order - b.order);
+      });
+
+      statuses.forEach(status => {
+        const column = document.createElement('div');
+        column.className = 'kanban-column';
+        column.setAttribute('data-status', status);
+
+        const header = document.createElement('div');
+        header.className = 'kanban-column-header';
+        header.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+            <span>${status}</span>
+            <span class="kanban-column-count">${tasksByStatus[status].length}</span>
+          </div>
+        `;
+
+        const tasksContainer = document.createElement('div');
+        tasksContainer.className = 'kanban-tasks';
+        tasksContainer.setAttribute('data-status', status);
+
+        tasksByStatus[status].forEach(task => {
+          const card = document.createElement('div');
+          const statusLower = status.toLowerCase().replace(' ', '');
+          card.className = `kanban-task-card ${statusLower}${task.priority ? ' flagged' : ''}`;
+          card.setAttribute('data-task-id', task.id);
+          card.draggable = true;
+
+          const recurrenceBadge = getRecurrenceDisplay(task);
+          card.innerHTML = `
+            <div class="kanban-task-title">${recurrenceBadge} ${task.title}</div>
+            <div class="kanban-task-meta">${task.stage ? task.stage : 'no stage'}</div>
+            <div class="kanban-task-date">${formatDate(task.dueDate)}</div>
+          `;
+
+          card.addEventListener('click', () => openTaskModal(task.id));
+
+          tasksContainer.appendChild(card);
+        });
+
+        column.appendChild(header);
+        column.appendChild(tasksContainer);
+        board.appendChild(column);
+      });
+
+      attachKanbanEventListeners();
+    }
+
+    function openTaskModal(taskId) {
+      const task = app.tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      document.getElementById('modalTaskTitle').value = task.title;
+      document.getElementById('modalTaskProject').value = task.project;
+      document.getElementById('modalTaskStatus').value = task.status;
+      document.getElementById('modalTaskDate').value = task.dueDate;
+      document.getElementById('modalTaskNotes').value = task.notes || '';
+      document.getElementById('modalTaskRecurrence').textContent = getRecurrenceDisplay(task).replace(/<[^>]*>/g, '') || 'Never';
+
+      // Setup project dropdown
+      const projectSelect = document.getElementById('modalTaskProject');
+      projectSelect.innerHTML = '';
+      app.projects.forEach(p => {
+        const option = document.createElement('option');
+        option.value = p.name;
+        option.textContent = p.name;
+        projectSelect.appendChild(option);
+      });
+      projectSelect.value = task.project;
+
+      // Setup status dropdown
+      const statusSelect = document.getElementById('modalTaskStatus');
+      statusSelect.innerHTML = '';
+      app.settings.statuses.forEach(s => {
+        const option = document.createElement('option');
+        option.value = s.name;
+        option.textContent = s.name;
+        statusSelect.appendChild(option);
+      });
+      statusSelect.value = task.status;
+
+      // Modal buttons
+      document.getElementById('modalSaveBtn').onclick = () => saveTaskFromModal(taskId);
+      document.getElementById('modalFlagBtn').onclick = () => toggleTaskFlag(taskId);
+      document.getElementById('modalDeleteBtn').onclick = () => deleteTaskFromModal(taskId);
+      document.getElementById('modalClose').onclick = () => closeTaskModal();
+
+      document.getElementById('taskModal').classList.add('active');
+    }
+
+    function closeTaskModal() {
+      document.getElementById('taskModal').classList.remove('active');
+    }
+
+    function saveTaskFromModal(taskId) {
+      const task = app.tasks.find(t => t.id === taskId);
+      if (task) {
+        task.title = document.getElementById('modalTaskTitle').value;
+        task.project = document.getElementById('modalTaskProject').value;
+        task.status = document.getElementById('modalTaskStatus').value;
+        task.dueDate = document.getElementById('modalTaskDate').value;
+        task.notes = document.getElementById('modalTaskNotes').value;
+        saveToStorage();
+        renderKanbanView();
+        closeTaskModal();
+      }
+    }
+
+    function toggleTaskFlag(taskId) {
+      const task = app.tasks.find(t => t.id === taskId);
+      if (task) {
+        task.priority = !task.priority;
+        saveToStorage();
+        renderKanbanView();
+      }
+    }
+
+    function deleteTaskFromModal(taskId) {
+      if (confirm('Delete this task?')) {
+        app.tasks = app.tasks.filter(t => t.id !== taskId);
+        saveToStorage();
+        renderKanbanView();
+        closeTaskModal();
+      }
+    }
+
+    function attachKanbanEventListeners() {
+      const cards = document.querySelectorAll('.kanban-task-card');
+      const columns = document.querySelectorAll('.kanban-tasks');
+
+      cards.forEach(card => {
+        card.addEventListener('dragstart', (e) => {
+          card.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('taskId', card.getAttribute('data-task-id'));
+        });
+
+        card.addEventListener('dragend', () => {
+          card.classList.remove('dragging');
+        });
+      });
+
+      columns.forEach(column => {
+        column.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          column.style.opacity = '0.7';
+        });
+
+        column.addEventListener('dragleave', () => {
+          column.style.opacity = '1';
+        });
+
+        column.addEventListener('drop', (e) => {
+          e.preventDefault();
+          column.style.opacity = '1';
+          const taskId = e.dataTransfer.getData('taskId');
+          const newStatus = column.getAttribute('data-status');
+          const task = app.tasks.find(t => t.id === taskId);
+          if (task && task.status !== newStatus) {
+            task.status = newStatus;
+            if (newStatus === 'IN PROG' && !task.startedAt) {
+              task.startedAt = new Date().toISOString();
+            }
+            if (newStatus === 'DONE' && !task.completedAt) {
+              task.completedAt = new Date().toISOString();
+            }
+            saveToStorage();
+            renderKanbanView();
+          }
+        });
+      });
+    }
+
+    // ===== CALENDAR FUNCTIONS =====
+    function renderWeeklyMeetingView() {
+      const container = document.getElementById('calendar-grid');
+      container.innerHTML = '';
+      container.style.display = 'flex';
+      container.style.flexDirection = 'column';
+      container.style.gap = '12px';
+      container.style.padding = '12px';
+      container.style.height = 'auto';
+      container.style.background = 'var(--bg-dark)';
+
+      const today = new Date();
+      const weekDays = [];
+
+      // Generate today + next 6 days
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+        weekDays.push(date);
+      }
+
+      weekDays.forEach(date => {
+        const dateStr = formatDateISO(date);
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+        const dayNum = date.getDate();
+        const isToday = date.toDateString() === today.toDateString();
+
+        // Day header
+        const dayHeader = document.createElement('div');
+        dayHeader.style.cssText = `
+          padding: 8px 12px;
+          background-color: var(--bg-card);
+          border: 1px solid var(--border-secondary);
+          border-radius: 2px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-weight: bold;
+          font-size: 10px;
+          text-transform: uppercase;
+          color: var(--text-primary);
+          ${isToday ? 'border-color: var(--color-todo); background-color: rgba(166, 176, 138, 0.15);' : ''}
+        `;
+        dayHeader.innerHTML = `
+          <span>${dayName} ${dayNum}${isToday ? ' (TODAY)' : ''}</span>
+          <button style="padding: 4px 8px; font-size: 8px; background-color: var(--bg-input); border: 1px solid var(--border-secondary); color: var(--text-primary); cursor: pointer; border-radius: 2px;">+ ADD</button>
+        `;
+
+        dayHeader.querySelector('button').addEventListener('click', () => createNewMeeting(dateStr));
+        container.appendChild(dayHeader);
+
+        // Meetings for this day
+        const meetings = app.meetings
+          .filter(m => m.date === dateStr)
+          .sort((a, b) => a.time.localeCompare(b.time));
+
+        const meetingsContainer = document.createElement('div');
+        meetingsContainer.style.cssText = `
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          padding: 0 12px;
+          margin-bottom: 8px;
+        `;
+
+        if (meetings.length === 0) {
+          const emptyMsg = document.createElement('div');
+          emptyMsg.style.cssText = 'font-size: 9px; color: var(--text-muted); font-style: italic;';
+          emptyMsg.textContent = '(No meetings)';
+          meetingsContainer.appendChild(emptyMsg);
+        } else {
+          meetings.forEach(meeting => {
+            const meetingEl = document.createElement('div');
+            const borderColor = meeting.priority ? 'var(--color-inprog)' : 'var(--color-todo)';
+            const bgColor = meeting.priority ? 'rgba(201, 184, 228, 0.1)' : 'rgba(166, 176, 138, 0.1)';
+            const hoverBgColor = meeting.priority ? 'rgba(201, 184, 228, 0.2)' : 'rgba(166, 176, 138, 0.15)';
+
+            meetingEl.style.cssText = `
+              padding: 6px 8px;
+              background-color: ${bgColor};
+              border-left: 3px solid ${borderColor};
+              border-radius: 2px;
+              font-size: 9px;
+              cursor: pointer;
+              transition: all 0.2s;
+            `;
+            meetingEl.onmouseenter = () => { meetingEl.style.backgroundColor = hoverBgColor; };
+            meetingEl.onmouseleave = () => { meetingEl.style.backgroundColor = bgColor; };
+
+            const priorityIcon = meeting.priority ? '★ ' : '';
+            meetingEl.innerHTML = `
+              <div style="font-weight: bold; color: var(--text-primary);">${priorityIcon}${meeting.time} – ${meeting.title}</div>
+              <div style="font-size: 8px; color: var(--text-secondary);">${meeting.duration}m ${meeting.project ? '• ' + meeting.project : ''}</div>
+            `;
+
+            meetingEl.addEventListener('click', () => openMeetingModal(meeting.id));
+            meetingsContainer.appendChild(meetingEl);
+          });
+        }
+
+        container.appendChild(meetingsContainer);
+      });
+    }
+
+    function formatDateISO(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function createNewMeeting(dateStr) {
+      const meeting = {
+        id: generateUUID(),
+        title: 'New Meeting',
+        date: dateStr,
+        time: '10:00',
+        duration: 60,
+        project: null,
+        notes: '',
+        priority: false,
+        recurrence: { type: 'never' }
+      };
+      openMeetingModal(meeting.id, meeting);
+    }
+
+    function openMeetingModal(meetingId, newMeeting = null) {
+      let meeting = app.meetings.find(m => m.id === meetingId);
+      if (!meeting && newMeeting) {
+        meeting = newMeeting;
+        app.meetings.push(meeting);
+      }
+      if (!meeting) return;
+
+      document.getElementById('modalMeetingTitle').value = meeting.title;
+      document.getElementById('modalMeetingDate').value = meeting.date;
+      document.getElementById('modalMeetingTime').value = meeting.time;
+      document.getElementById('modalMeetingDuration').value = meeting.duration;
+      document.getElementById('modalMeetingProject').value = meeting.project || '';
+      document.getElementById('modalMeetingPriority').checked = meeting.priority || false;
+      document.getElementById('modalMeetingNotes').value = meeting.notes || '';
+
+      // Setup project dropdown
+      const projectSelect = document.getElementById('modalMeetingProject');
+      projectSelect.innerHTML = '';
+
+      const emptyOption = document.createElement('option');
+      emptyOption.value = '';
+      emptyOption.textContent = '(No project)';
+      projectSelect.appendChild(emptyOption);
+
+      app.projects.forEach(p => {
+        const option = document.createElement('option');
+        option.value = p.name;
+        option.textContent = p.name;
+        projectSelect.appendChild(option);
+      });
+      projectSelect.value = meeting.project || '';
+
+      document.getElementById('modalMeetingSave').onclick = () => saveMeetingFromModal(meetingId);
+      document.getElementById('modalMeetingDelete').onclick = () => deleteMeetingFromModal(meetingId);
+      document.getElementById('modalMeetingClose').onclick = () => closeMeetingModal();
+
+      document.getElementById('meetingModal').classList.add('active');
+    }
+
+    function closeMeetingModal() {
+      document.getElementById('meetingModal').classList.remove('active');
+    }
+
+    function saveMeetingFromModal(meetingId) {
+      const meeting = app.meetings.find(m => m.id === meetingId);
+      if (meeting) {
+        meeting.title = document.getElementById('modalMeetingTitle').value;
+        meeting.date = document.getElementById('modalMeetingDate').value;
+        meeting.time = document.getElementById('modalMeetingTime').value;
+        meeting.duration = parseInt(document.getElementById('modalMeetingDuration').value);
+        meeting.project = document.getElementById('modalMeetingProject').value || null;
+        meeting.priority = document.getElementById('modalMeetingPriority').checked;
+        meeting.notes = document.getElementById('modalMeetingNotes').value;
+        saveToStorage();
+        renderWeeklyMeetingView();
+        updateSidebarCalendarWidget();
+        closeMeetingModal();
+      }
+    }
+
+    function deleteMeetingFromModal(meetingId) {
+      if (confirm('Delete this meeting?')) {
+        app.meetings = app.meetings.filter(m => m.id !== meetingId);
+        saveToStorage();
+        renderWeeklyMeetingView();
+        updateSidebarCalendarWidget();
+        closeMeetingModal();
+      }
+    }
+
+    function attachCalendarEventListeners() {
+      document.getElementById('calendar-prev').addEventListener('click', () => {
+        const newDate = new Date(app.currentCalendarDate);
+        newDate.setDate(1);
+        newDate.setMonth(newDate.getMonth() - 1);
+        app.currentCalendarDate = newDate;
+        renderCalendarView();
+      });
+
+      document.getElementById('calendar-next').addEventListener('click', () => {
+        const newDate = new Date(app.currentCalendarDate);
+        newDate.setDate(1);
+        newDate.setMonth(newDate.getMonth() + 1);
+        app.currentCalendarDate = newDate;
+        renderCalendarView();
+      });
+
+      document.getElementById('calendar-today').addEventListener('click', () => {
+        app.currentCalendarDate = new Date();
+        renderCalendarView();
+      });
+    }
+
+    function updateSidebarCalendarWidget() {
+      const widget = document.getElementById('sidebar-calendar-widget');
+      if (!widget) return;
+
+      const today = new Date();
+      const todayStr = formatDateISO(today);
+      const todayMeetings = app.meetings.filter(m => m.date === todayStr).sort((a, b) => a.time.localeCompare(b.time));
+
+      let html = `<div class="calendar-widget-title">📅 TODAY</div>`;
+      html += `<div class="calendar-widget-date">${today.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>`;
+
+      if (todayMeetings.length === 0) {
+        html += `<div class="calendar-widget-empty">No meetings</div>`;
+      } else {
+        todayMeetings.forEach(meeting => {
+          const priorityIcon = meeting.priority ? '★ ' : '';
+          const priorityClass = meeting.priority ? 'priority' : '';
+          html += `
+            <div class="calendar-widget-meeting ${priorityClass}" data-meeting-id="${meeting.id}">
+              <span class="calendar-widget-time">${meeting.time} (${meeting.duration}m)</span>
+              ${priorityIcon}${meeting.title}
+            </div>
+          `;
+        });
+      }
+
+      widget.innerHTML = html;
+
+      // Add click handlers
+      document.querySelectorAll('.calendar-widget-meeting').forEach(el => {
+        el.addEventListener('click', () => {
+          const meetingId = el.getAttribute('data-meeting-id');
+          switchTab('calendar');
+          openMeetingModal(meetingId);
+        });
+      });
     }
 
     function attachTaskEventListeners() {
@@ -2584,6 +3772,7 @@
         'list': '🕐 LIST',
         'kanban': '🕐 KANBAN',
         'timeline': '📋 TIMELINE',
+        'calendar': '📅 CALENDAR',
         'summary': '📊 SUMMARY',
         'settings': '⚙ SETTINGS'
       };
@@ -2593,8 +3782,9 @@
       localStorage.setItem('currentTab', tabName);
 
       if (tabName === 'list') renderTasks();
-      if (tabName === 'kanban') { /* renderKanban() */ }
+      if (tabName === 'kanban') renderKanbanView();
       if (tabName === 'timeline') renderTimeline();
+      if (tabName === 'calendar') renderWeeklyMeetingView();
       if (tabName === 'summary') renderSummary();
       if (tabName === 'settings') renderSettings();
     }
@@ -2781,6 +3971,19 @@
     // Theme toggle
     document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
 
+    // Modal close on overlay click
+    document.getElementById('taskModal').addEventListener('click', (e) => {
+      if (e.target.id === 'taskModal') {
+        closeTaskModal();
+      }
+    });
+
+    document.getElementById('meetingModal').addEventListener('click', (e) => {
+      if (e.target.id === 'meetingModal') {
+        closeMeetingModal();
+      }
+    });
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
@@ -2819,6 +4022,7 @@
     populateProjectDropdowns();
     renderTasks();
     renderSummary();
+    updateSidebarCalendarWidget();
     updateClock();
     setInterval(updateClock, 1000);
 

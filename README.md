@@ -1,227 +1,256 @@
 # Task Dashboard
 
-A local HTML-based task management and project timeline dashboard designed for minimal friction task creation and tracking. Built for production ML/banking environments with a pixel aesthetic and no external dependencies.
+A minimal, offline-first task management + meeting planner for mindful planning. Single HTML file, no dependencies, works anywhere.
 
-**[📥 Download & Run](dashboard.html)** — Just double-click to open in your browser. All data stored locally in your browser.
+**[📥 Download & Run](dashboard.html)** — Just double-click to open in your browser. All data stays local.
+
+---
 
 ## Features
 
-### 🕐 TASKS Tab
-- **Quick Add Form** — Minimal friction: title + project + date + ADD
-- **Task Cards** — Drag to reorder, status dropdown, three action buttons
-- **State Workflow** — TO DO → Start working → IN PROG → Done → DONE
-- **Flag Priority** — Toggle high-priority flag (yellow) independent of status
-- **Expandable Notes** — Unrestricted long-form text per task
-- **Done Section** — Collapsed by default, shows completed task count
+### 🕐 LIST View - Project-Organized Tasks
+- Tasks grouped by project (collapsible sections)
+- Quick add form: title | project | date | ADD
+- Drag-to-reorder within projects
+- **Recurrence support:** Daily, Weekly (multiselect), Monthly (date or ordinal)
+- Recurrence badges show pattern at a glance (【┘】)
+- Expandable notes per task
+- Status workflow: TO DO → IN PROG → PENDING → DONE
+- Priority flag (🚩) independent of status
 
-### 📋 TIMELINE Tab
-- **Project Selector** — Switch between projects (PROJECT_1, PROJECT_2, PROJECT_3)
-- **Pipeline View** — Horizontal swimlanes with stages (customize in Settings)
-- **Stage Progress** — Per-stage completion %, task count, task preview
-- **Stage Management** — Edit/delete stages, add new stages
+### 🕐 KANBAN View - Status-Based Focus
+- 4-column board: TO DO | IN PROG | PENDING | DONE
+- **Project selector** - view one project at a time
+- Drag cards between columns to change status
+- Task modal for detailed editing
+- Auto-timestamps for started/completed
 
-### 📊 SUMMARY Tab
-- **Key Metrics** — Total tasks, completion %, in progress, overdue
-- **Status Breakdown** — Task counts & percentages by status (TO DO, IN PROG, PENDING, DONE)
-- **Project Completion** — Progress bars showing % complete per project
-- **Task Details Table** — Filterable/searchable task reference for performance reviews
-  - Search by task title
-  - Filter by project & status
-  - Shows full notes (no character limit)
-  - Timestamps: created, started, completed
-  - Sticky header for easy scrolling
+### 📅 CALENDAR View - Weekly Planning
+- **Today + next 6 days** (not a grid calendar)
+- See all meetings for each day sorted by time
+- Add meetings on any date (past or future allowed)
+- Priority flag (★) for important meetings
+- **Sidebar widget** shows today's meetings only
+- Color-coded: Sage green (normal), Lavender (priority)
 
-### ⚙ SETTINGS Tab
-- **Data Management** — Export/import JSON backups for migration
-- **User Name** — Customize who is using the dashboard
-- **Projects** — Add/remove/edit projects (edit inline, updates all tasks automatically)
-- **Statuses** — Add/remove/edit custom statuses (defaults: TO DO, IN PROG, PENDING, DONE)
+### 📋 TIMELINE View - Project Pipeline
+- Customizable project stages
+- Progress bars per stage
+- Task counts and previews
+- Edit/delete/add stages inline
 
-## Color Scheme
+### 📊 SUMMARY View - Review & Metrics
+- Key metrics (total, completion %, in progress, overdue)
+- Status breakdown with percentages
+- Project completion bars
+- Task details table (searchable, filterable)
+- Designed for performance reviews
 
-All colors follow a **dark pixel aesthetic** with sage green accents:
+### ⚙ SETTINGS - Configuration
+- User name
+- Projects (add/remove/edit)
+- Statuses (add/remove/edit custom statuses)
+- Light/dark theme toggle
+- Export/import data as JSON
 
-| State | Outline | Text | Use Case |
-|-------|---------|------|----------|
-| TO DO | #6a7a5a | #a6b08a | Default task state |
-| IN PROG | #c9b8e4 | #d9cce9 | Active work (lavender) |
-| PENDING | #e4c5d8 | #e8c5d8 | Blocked/waiting (pink) |
-| DONE | #5a6a4a | #5a6a4a | Completed (muted gray) |
-| FLAGGED | #e8ddb8 | #f0e8d0 | High priority (yellow) — overlays any state |
+---
 
-## Theme Support
+## Quick Start
 
-### Light & Dark Modes
-- **Toggle button** in header (🌙 for dark, ☀️ for light)
-- **Theme preference** persists across sessions (localStorage)
-- **Light mode palette:**
-  - Light backgrounds (#f8f8f8, #ffffff)
-  - Dark text for contrast
-  - Adjusted state colors (warmer yellow for light backgrounds)
-  - Sage green accent maintained (#a6b08a)
-- **Accessibility** — Light mode better for daytime use and accessibility
+1. **Download** `dashboard.html`
+2. **Double-click** to open in browser
+3. **Add a project** in SETTINGS (or use defaults)
+4. **Create your first task** in LIST view
+5. **Switch views** to find your workflow
+
+---
 
 ## Keyboard Shortcuts
 
 | Shortcut | Action |
 |----------|--------|
 | `cmd/ctrl + n` | Focus new task input |
-| `cmd/ctrl + w` | Toggle "working on" for first active task |
+| `cmd/ctrl + w` | Toggle "working on" (mark IN PROG) |
 | `cmd/ctrl + d` | Mark first active task as done |
-
-## Data Persistence & Portability
-
-### Storage Architecture
-All data is stored in **localStorage** — your browser's local storage. No cloud sync, no external servers.
-
-- **Survives**: Browser refresh, system restart
-- **Does not survive**: Browser data clear, switching browsers/devices
-- **Portable**: Use export/import to transfer between devices
-
-### Export/Import (Backup & Migration)
-**Settings Tab** includes data management:
-
-#### Export Data
-- Click **📥 EXPORT DATA** button
-- Downloads `task-dashboard-backup-YYYY-MM-DD.json`
-- Contains: all tasks, projects, settings, timestamps, notes
-- Use this before upgrading to new dashboard versions
-- Keep backups for safety
-
-#### Import Data
-- Click **📤 IMPORT DATA** button
-- Select previously exported `.json` file
-- Restores all tasks, projects, settings
-- **Warning**: This overwrites current data (export first if needed)
-
-### Migration Path
-1. **Current version** → Export data
-2. **Update dashboard.html** to new version
-3. **Import data** in new version
-4. All details preserved, no data loss
-
-## Architecture
-
-### Single-File Design
-- **One HTML file** — No build step, no dependencies
-- **Self-contained** — All CSS, JavaScript, and HTML in one file
-- **Portable** — Copy/email/backup the single `dashboard.html` file
-- **Offline-first** — Works completely offline, no internet required
-
-### Data Flow
-```
-User Input → JavaScript State (app) → localStorage
-                ↓
-          Render UI Components
-                ↓
-          User sees changes immediately
-```
-
-### Why This Design?
-✅ **No version lock-in** — Export data anytime, import to any future version  
-✅ **Zero dependencies** — No npm, no CDN, no package management  
-✅ **Corporate-friendly** — Passes security reviews, no external calls  
-✅ **Future-proof** — Data lives in portable JSON files, not locked in  
-✅ **Simple upgrades** — Download new version, import old data, done  
-
-## Data Model
-
-### Task Object
-```javascript
-{
-  id: string,                   // UUID
-  title: string,                // Task name
-  project: string,              // Project name
-  stage: string,                // Project stage (optional)
-  status: string,               // TO DO, IN PROG, PENDING, DONE
-  dueDate: string,              // DD MMM YYYY format
-  notes: string,                // Unrestricted long-form text
-  priority: boolean,            // Flagged as high priority
-  createdAt: ISO timestamp,     // Auto-set on creation
-  startedAt: ISO timestamp,     // Set when status → IN PROG
-  completedAt: ISO timestamp,   // Set when status → DONE
-  statusHistory: Array,         // All status changes with timestamps
-  order: number                 // For drag-reorder
-}
-```
-
-### Project Object
-```javascript
-{
-  id: string,      // UUID
-  name: string,    // Project name
-  stages: Array    // Pipeline stages
-}
-```
-
-### Settings Object
-```javascript
-{
-  userName: string,
-  projects: Array,   // { id, name }
-  statuses: Array    // { id, name }
-}
-```
-
-## Tech Stack
-
-- **HTML5** — Single file, semantic markup
-- **CSS** — Inline styles + minimal global (no external stylesheets)
-- **Vanilla JavaScript** — No frameworks, no libraries
-- **localStorage** — Data persistence (JSON serialization)
-- **Font** — Monospace (Courier New) for pixel aesthetic
-
-## Browser Support
-
-Works in all modern browsers:
-- ✅ Chrome/Chromium
-- ✅ Firefox
-- ✅ Safari
-- ✅ Edge
-
-Requires:
-- JavaScript enabled
-- localStorage enabled
-- ~56KB of disk space for the HTML file
-
-## Usage
-
-1. **Download** → Save `dashboard.html` anywhere
-2. **Open** → Double-click the file (or drag into browser)
-3. **Start tracking** → Add a project, then add tasks
-4. **Review** → Check the Summary tab for performance review context
-
-## Default Projects
-
-Pre-loaded with:
-- **PROJECT_1**
-- **PROJECT_2**
-- **PROJECT_3**
-
-Customize project names anytime in the Settings tab.
-
-## Size & Performance
-
-- **File size**: 56 KB (single HTML file)
-- **No external requests** — Fully offline capable
-- **Fast load time** — Instant on local machine
-- **Lightweight** — Works on older machines/browsers
-
-## Future Enhancements (Out of Scope)
-
-- Cloud sync
-- Mobile app
-- Time tracking
-- Recurring tasks
-- Dependencies between tasks
-- Comments/collaboration
-- Attachments
-- PDF export
-
-## Questions?
-
-Refer to `CLAUDE.md` for full project specification and design details.
 
 ---
 
-**Built with ❤️ for minimal friction task management**
+## Design Philosophy
+
+- **Minimal friction** — Create tasks in < 10 seconds
+- **Mindfulness first** — Focus on today + this week, not overwhelm
+- **Offline** — No cloud, no tracking, just data
+- **Local storage** — Everything persists in your browser
+- **Pixel aesthetic** — Intentionally retro, corporate-friendly
+- **No dependencies** — Pure HTML/CSS/JavaScript
+
+---
+
+## Color System
+
+**Tasks:**
+- **TO DO** - Sage gray
+- **IN PROG** - Lavender (working)
+- **PENDING** - Pink (blocked/waiting)
+- **DONE** - Muted gray with strikethrough
+- **FLAGGED** - Yellow overlay (priority)
+
+**Meetings:**
+- **Default** - Sage green
+- **Priority** - Lavender (★)
+
+**Theme:** Dark mode (default) + Light mode toggle
+
+---
+
+## Data Persistence
+
+- **Storage:** Browser localStorage (no server needed)
+- **Backup:** Export to JSON (manual, user-initiated)
+- **Privacy:** 100% local, nothing leaves your machine
+- **Migration:** Export data, update HTML, import data
+
+---
+
+## Recurrence Patterns
+
+### Daily
+Repeats every day
+
+### Weekly
+- Multiselect days (Mon-Sun)
+- Shows badge: 【┘】Weekly (M,W,F)
+
+### Monthly
+**Option A: Specific date**
+- 1st, 5th, 10th, 15th, 20th, 25th, 28th, or last day
+- Shows badge: 【┘】Monthly (15)
+
+**Option B: Ordinal weekday**
+- 1st Monday, 2nd Tuesday, 3rd Wednesday... Last Friday, etc.
+- Shows badge: 【┘】Monthly (Last Fri)
+
+---
+
+## File Size & Performance
+
+- **Single file:** `dashboard.html` (~56 KB)
+- **Load time:** Instant (no external requests)
+- **Browser support:** Chrome, Firefox, Safari, Edge
+- **Rendering:** O(n) where n = number of tasks/meetings
+- **Storage:** Up to ~10MB in localStorage (browser limit)
+
+---
+
+## Use Cases
+
+### Daily Planning
+1. Open LIST view
+2. See today's tasks grouped by project
+3. Drag to reorder priority
+4. Check CALENDAR for meetings
+
+### Weekly Review
+1. Open SUMMARY for key metrics
+2. Check TIMELINE for project roadmints
+3. Review completed tasks with notes in table
+4. Prepare for performance review
+
+### Project Management
+1. Switch KANBAN project selector
+2. View 4-column status board
+3. Drag cards to update status
+4. Use TIMELINE for milestone tracking
+
+### Meeting Scheduler
+1. Click CALENDAR tab
+2. Click "+ ADD" on any day
+3. Set title, time, duration, project
+4. Mark priority (★) if important
+5. See today's meetings in sidebar widget
+
+---
+
+## Settings & Customization
+
+### Projects
+- Pre-loaded with PROJECT_1, PROJECT_2, PROJECT_3
+- Add/remove/rename anytime in SETTINGS
+- Used to organize tasks and meetings
+
+### Statuses
+- Defaults: TO DO, IN PROG, PENDING, DONE
+- Customize in SETTINGS (add/remove statuses)
+- Tasks respect your custom statuses
+
+### Theme
+- Dark mode (default, recommended for long use)
+- Light mode (better for daytime/accessibility)
+- Toggle via button in header
+
+---
+
+## Troubleshooting
+
+**Tasks disappeared after changing status?**
+- This was a bug in early versions. Update to latest `dashboard.html`
+
+**Meetings not showing in sidebar?**
+- Sidebar only shows TODAY's meetings by design
+- Check CALENDAR tab for full week view
+
+**How do I back up my data?**
+- SETTINGS → Export Data → save JSON file
+- Keep backup before updating dashboard.html
+
+**Can I use this on my phone?**
+- Yes, but UI designed for desktop
+- Mobile version possible in future
+
+---
+
+## Tech Stack
+
+- **HTML5** - Semantic markup
+- **CSS3** - Inline styles + CSS variables (theming)
+- **Vanilla JavaScript** - No frameworks, no build step
+- **localStorage** - Data persistence
+- **Zero dependencies** - Corporate proxy friendly
+
+---
+
+## License & Privacy
+
+- Single file, no tracking, no external calls
+- All data stored locally in your browser
+- Safe to use in corporate/regulated environments
+- No logs, no analytics, no telemetry
+
+---
+
+## What's Not Included
+
+- ❌ Time tracking (logged hours per task)
+- ❌ Markdown in notes
+- ❌ Tags/labels
+- ❌ Recurring meetings (coming soon)
+- ❌ Task dependencies
+- ❌ Collaboration/comments
+- ❌ Cloud sync
+- ❌ Mobile app
+
+---
+
+## Feedback & Suggestions
+
+Found a bug? Want a feature?
+
+- Check `CLAUDE.md` for full technical spec
+- Review code in `dashboard.html` (all-in-one file)
+- Submit issues via GitHub if applicable
+
+---
+
+**Built for mindful planning. No fluff, just tasks and meetings.**
+
+**Made with ❤️ for offline-first productivity.**

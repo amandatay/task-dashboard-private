@@ -1,276 +1,209 @@
 # Task Dashboard - Project Spec
 
-**Status:** Design Complete - Ready for Build  
+**Status:** Phase 4 Complete - Ready for Phase 5 Testing  
 **User:** Amanda  
 **Created:** 22 Sep 2026  
-**Last Updated:** 22 Sep 2026
+**Last Updated:** 22 Sep 2026  
+**Current Build:** Phase 1-4 Complete (LIST, KANBAN, CALENDAR, TIMELINE, SUMMARY, SETTINGS)
 
 ---
 
 ## Project Overview
 
-A local HTML-based task management and project timeline dashboard designed for minimal friction task creation and tracking. Built for production ML/banking environment. Corporate-friendly (no external CDN calls, single HTML file, no package managers).
+A local HTML-based task management + meeting planner dashboard designed for **minimal friction** and **mindfulness**. Built for production use in ML/banking environments. Corporate-friendly (no external CDN calls, single HTML file, no package managers).
 
 **Distribution:** Single self-contained HTML file (double-click to run).
+
+**Key Feature:** Hybrid task/meeting management with 6 complementary views optimized for different workflows.
 
 ---
 
 ## Core Design Principles
 
-1. **Lowest path of resistance to adding/updating tasks** — Primary UX focus
-2. **Everything else is secondary** — Projects, templates, summaries are supporting features
-3. **Pixel aesthetic with sage green (#a6b08a) accents** — Intentionally lo-fi to avoid corporate security triggers
-4. **Local-first persistence** — localStorage or IndexedDB, no cloud sync
-5. **No external dependencies** — Pure vanilla HTML/CSS/JavaScript
+1. **Minimal friction for daily task + meeting capture** — Primary UX focus
+2. **Mindfulness-first calendar view** — Focus on today + this week, not calendar grids
+3. **Multiple views for different workflows** — LIST (overview), KANBAN (focus), CALENDAR (planning), TIMELINE (roadmap)
+4. **Pixel aesthetic with sage green (#a6b08a) accents** — Intentionally lo-fi, retro feel
+5. **Local-first persistence** — localStorage, no cloud sync, no external APIs
+6. **No external dependencies** — Pure vanilla HTML/CSS/JavaScript
 
 ---
 
-## Feature Set - Confirmed
+## Implemented Features (Phases 1-4)
 
-### 1. TASKS Tab ✅
+### Phase 1: Core Task Management ✅
 
-**Primary focus.** Minimal friction for task management.
+#### LIST View - Project-Organized Tasks
+- **Project grouping** with collapsible sections (▼/◀ toggle)
+- Tasks organized alphabetically by project
+- Each project shows task count badge
+- Drag-to-reorder tasks within projects
+- **Quick Add Form** at top:
+  - Title | Project dropdown | Date picker | ADD button
+  - Date defaults to TODAY
+  - Expandable "More" section for advanced options
 
-#### Quick Add Form (Hero Section)
-- Fields: Task title | Project (dropdown) | Date | ADD button
-- Date pre-fills with TODAY (DD MMM YYYY format, e.g., "22 Sep 2026")
-- No tags field
-- All required fields validated before submit
-
-#### Task Card Layout
-Grid columns: Drag Handle | Task Title + Project/Stage | Status Dropdown | Date | Notes Link | **Three Action Buttons** | Delete
-
-**Three Action Buttons (separate):**
-1. **State button** → "Start working" or "Done" (context-aware)
-2. **Flag button (🚩)** → Toggle high-priority flag (separate, always available)
-3. **Delete button (×)** → Remove task
-
-**Task Card Interactions:**
-- **Drag handle (⋮⋮)** → Reorder tasks within active list
-- **Status dropdown** → 4 states: TO DO | IN PROG | PENDING | DONE
-- **State button** → See workflow below
-- **Flag button (🚩)** → Toggle high-priority flag (independent of state)
-- **Notes link** → Expandable long-form notes (unrestricted character count, secondary view)
-- **Delete button (×)** → Remove task
-
-#### Task Card Cosmetics (Gray Background + Outline Colors)
-- **Background:** Always #3d3d3d (gray)
-- **Outline color + font color changes ONLY (no fill):**
-  - **Default (TO DO):** Gray outline (#6a7a5a), gray text (#a6b08a)
-  - **In Progress (IN PROG):** Lavender outline (#c9b8e4), lavender text (#d9cce9)
-  - **Pending:** Pink outline (#e4c5d8), pink text (#e8c5d8)
-  - **Flagged (High Priority):** Yellow outline (#e8ddb8), yellow text (#f0e8d0) — overlays on top of current state
-  - **Done:** Muted (#5a6a4a), strikethrough text
-
-#### Workflow: The Full Cycle (Critical Flow)
-**User journey for activating a task:**
-
-1. **Initial state (TO DO):**
-   - Card has default gray outline
-   - State button shows: **"Start working"**
-   - Status dropdown shows: TO DO
-   
-2. **User clicks "Start working" button:**
-   - Status dropdown auto-changes to: **IN PROG**
-   - Card outline changes to: **Lavender (#c9b8e4)**
-   - Card text changes to: **Lavender (#d9cce9)**
-   - State button text changes to: **"Done"**
-   - Flag button remains available (independent)
-
-3. **User clicks "Done" button:**
-   - Status dropdown auto-changes to: **DONE**
-   - Card moves to DONE section
-   - Card becomes muted/strikethrough
-   - All colors fade to gray (#5a6a4a)
-
-**Flag behavior (independent):**
-- Clicking flag button toggles high-priority state at ANY point in the workflow
-- When flagged: Card outline + text become yellow (#e8ddb8 / #f0e8d0)
-- Can flag a TO DO, IN PROG, PENDING, or even DONE task
-- Flag state persists independently of task status
-
-#### Task List Organization
-- **Active Tasks section** → Displays TO DO + IN PROG + PENDING tasks
-- **Done section** → Collapsed by default, shows count "▶ DONE (7)"
-- Completed tasks are muted, strikethrough text
-
-#### Notes/Remarks (Expandable)
-- Expandable per task via "notes ▼" link
-- Unrestricted long-form text input
-- Collapses to save space
-- Secondary visual—not prominent but always accessible
+#### Task Features
+- **Status workflow:** TO DO → IN PROG → PENDING → DONE
+- **Priority flag (🚩)** - independent of status
+- **Recurrence support** (Daily/Weekly/Monthly):
+  - Weekly: multiselect days (Mon-Sun)
+  - Monthly: specific date OR ordinal weekday (1st Monday, Last Friday, etc.)
+  - Displays as **【┘】** badge with hover tooltip (e.g., "【┘】Weekly (M,W,F)")
+- **Expandable notes** - click "notes ▼" for full editor
+- **Drag-to-reorder** via handle (⋮⋮)
+- **Color-coded by status:**
+  - TO DO: Sage gray (#a6b08a)
+  - IN PROG: Lavender (#c9b8e4)
+  - PENDING: Pink (#e4c5d8)
+  - DONE: Muted (#5a6a4a), strikethrough
+  - Flagged: Yellow overlay (#e8ddb8)
 
 ---
 
-### 2. TIMELINE Tab ✅
+### Phase 2: KANBAN View ✅
 
-Project-centric view showing pipeline stages.
+#### Kanban Board - Status-Based Organization
+- **4-column layout:** TO DO | IN PROG | PENDING | DONE
+- **Project selector** at top - switch between projects
+- Only shows tasks from selected project
+- Task count per column
+- **Drag-to-change-status** between columns:
+  - Drag card left/right to update status
+  - Auto-sets `startedAt` when moving to IN PROG
+  - Auto-sets `completedAt` when moving to DONE
+  - Real-time count updates
 
-#### Project Selector
-- Buttons for each project (Adaptive-Seg, Regulatory, Resume Bot, etc.)
-- Click to switch projects
-
-#### Pipeline View (Customizable Stages)
-Horizontal swimlane of project stages with:
-- Stage name (ENGAGEMENT, KICKOFF, DATA EXPLORE, MODELING, DEPLOY, etc.)
-- Progress bar (visual completion %)
-- Task count (e.g., "2/2 tasks", "3/5 tasks")
-- Collapsible task preview (checkmarks for done, bullets for active)
-- "⋮ edit" button per stage to rename/customize/remove
-- "+ add stage" button to extend pipeline
-
-#### Stage Colors (Status Visual)
-- **Completed stage:** Sage green border (#a6b08a)
-- **Pending/In-progress:** Muted gray border
-- **Active work:** Warm amber accent
-
-#### Task Association
-- Each task shows its project → stage inline (e.g., "Adaptive-Seg → Data Exploration")
-- Clicking task name jumps to task detail in TASKS tab (if modal/expanded view exists)
-- Optional: Stage selection dropdown in task card creation/edit
+#### Task Modal - Detailed Editing
+- Click any task card to open modal
+- Edit: title, project, status, date, notes
+- Flag/unflag priority
+- Delete task
+- Changes persist immediately
 
 ---
 
-### 3. SUMMARY Tab ✅
+### Phase 3: CALENDAR View (Weekly Planner) ✅
 
-Performance review and completion tracking.
+#### Weekly Meeting Planner - Mindfulness First
+**NOT a calendar grid** - focuses on today + this week only.
 
-#### Key Metrics (4-column grid)
-- Total Tasks (count)
-- Completion % (calculated)
-- In Progress (count)
-- Overdue (count)
+- **7-day view** (today + next 6 days)
+- Each day shows:
+  - Day header: NAME DATE (TODAY label if today)
+  - Meetings sorted by time
+  - Quick "+ ADD" button per day
+- **Meeting display:**
+  - **★ time – title** (★ shows if priority)
+  - Duration (min) • Project (if set)
+  - Color: Sage green by default, lavender if priority
+- **Empty state:** "(No meetings)" text
+- **Date picker modal** to add meetings to any date (past or future allowed)
 
-#### Tasks by Status (4-column breakdown)
-- TO DO count + percentage
-- IN PROG count + percentage
-- PENDING count + percentage
-- DONE count + percentage
+#### Meeting Features
+- **All fields optional:** title, date, time, duration, project, notes
+- **Priority flag (★)** - highlights meeting as important
+- **Past dates allowed** - can plan/log meetings retroactively
+- **Modal supports edit/delete** from calendar
+- **Color coding:**
+  - Regular: Sage green border (#a6b08a)
+  - Priority: Lavender border (#c9b8e4)
 
-#### Completion by Project (Progress bars)
-- Project name | % complete (N/total) | Progress bar
-- One bar per project
-- Example: "Adaptive-Seg 60% (6/10)"
-
-#### Completed Tasks with Details (Filterable Task View) ⭐ **NEW**
-**Replaces simple "completed tasks list"**
-
-A detailed task view serving as a **filter/reference** for review writing. Shows:
-
-**Column headers:**
-- Task Title
-- Project
-- Status
-- Completed/Started Date & Time
-- Notes (preview or clickable expand)
-
-**Data rows:**
-- One row per task (all statuses: DONE, IN PROG, PENDING)
-- Date/time format: "22 Sep 2026 14:32" (when completed, started, or status changed)
-- Notes column shows preview or expandable text area (user can view full notes for review context)
-- Sortable by date, project, status (optional)
-- Searchable by task title (optional)
-
-**Purpose:** User can easily scan completed work with timestamps and notes for performance review context. Notes are fully readable (no character limit shown).
-
-#### Export / Action Buttons
-- Export as PDF
-- Copy for review (to clipboard)
-- Email summary
+#### Sidebar Calendar Widget
+- Shows **TODAY only** (not full week)
+- Lists all meetings for today with times
+- Shows **★** for priority meetings
+- Click any meeting to jump to CALENDAR tab + open modal
 
 ---
 
-### 4. SETTINGS Tab ✅
+### Phase 4: Timeline + Summary + Settings ✅
 
-User configuration UI (similar to config file but with UI).
+#### TIMELINE View - Project Pipeline
+- **Project selector** - choose project to view
+- **Horizontal swimlanes** by stage (customizable)
+- Per-stage info: name, progress %, task count, task preview
+- **Edit/delete/add stages** via modal buttons
 
-#### Editable Sections
-1. **User Name** → Text input (pre-filled with current user)
-2. **Projects** → List with add/remove per item
-3. **Statuses** → List with add/remove per item (default: TO DO, IN PROG, PENDING, DONE)
+#### SUMMARY View - Metrics + Review
+- **Key metrics:** Total tasks, Completion %, In progress, Overdue
+- **Status breakdown:** TO DO, IN PROG, PENDING, DONE (counts + %)
+- **Project completion bars** - shows % complete per project
+- **Task details table:**
+  - Searchable/filterable by title, project, status
+  - Shows dates, times, full notes
+  - Designed for performance reviews
 
-#### Save Button
-- Persists all settings to localStorage
-
----
-
-## Header & Navigation
-
-### Header Banner (All Views)
-- View title (TASK DASHBOARD / PROJECT TIMELINE / PERFORMANCE SUMMARY)
-- Current date + time (format: "22 Sep 2026 • 14:32 SGT")
-- Emoji anchor (🕐 for tasks, 📋 for timeline, 📊 for summary)
-
-### Left Sidebar
-- Navigation tabs: TASKS | TIMELINE | SUMMARY | SETTINGS
-- Active tab highlighted (sage green background)
-- User stats (name, task counts: total | active | done)
+#### SETTINGS View
+- **User name** text input
+- **Projects** add/remove/edit inline
+- **Statuses** add/remove/edit (default: TO DO, IN PROG, PENDING, DONE)
+- **Theme toggle** (light/dark mode via CSS variables)
+- **Data export/import** - JSON backups
 
 ---
 
-## Keyboard Shortcuts (Mac + Windows)
-
-Display at bottom of each tab.
-
-| Shortcut | Action |
-|----------|--------|
-| `cmd/ctrl + n` | New task |
-| `cmd/ctrl + d` | Mark done |
-| `cmd/ctrl + w` | Working on (toggle) |
-| `cmd/ctrl + /` | Filter tasks |
-| `cmd/ctrl + e` | Export |
-| `cmd/ctrl + k` | Show all shortcuts |
-
-Label: "cmd = mac • ctrl = windows"
-
----
-
-## Data Model
+## Data Models
 
 ### Task Object
-```
+```javascript
 {
-  id: string (uuid),
+  id: string (UUID),
   title: string,
   project: string,
   stage: string (optional),
-  status: "TO DO" | "IN PROG" | "PENDING" | "DONE",
-  dueDate: string (DD MMM YYYY),
-  notes: string (unrestricted),
-  priority: boolean (flagged),
+  status: string ("TO DO" | "IN PROG" | "PENDING" | "DONE"),
+  dueDate: string (ISO format: YYYY-MM-DD),
+  notes: string (unrestricted, optional),
+  priority: boolean (high-priority flag),
   createdAt: ISO timestamp,
-  startedAt: ISO timestamp (nullable, set when status → IN PROG),
-  completedAt: ISO timestamp (nullable, set when status → DONE),
-  statusHistory: [
-    { status: string, changedAt: ISO timestamp }
-  ],
+  startedAt: ISO timestamp (set when status → IN PROG),
+  completedAt: ISO timestamp (set when status → DONE),
+  statusHistory: Array[{ status, changedAt }],
+  recurrence: {
+    type: "never" | "daily" | "weekly" | "monthly",
+    daysOfWeek: ["mon", "tue", ...] (if weekly),
+    monthlyType: "date" | "weekday" (if monthly),
+    dateOfMonth: number (if monthly + date),
+    ordinal: "1st" | "2nd" | ... (if monthly + weekday),
+    weekday: "monday" | "tuesday" | ... (if monthly + weekday)
+  },
   order: number (drag-reorder index)
 }
 ```
 
-**Timestamp Notes:**
-- `createdAt`: Automatically set on task creation
-- `startedAt`: Set when user clicks "Start working" (status → IN PROG)
-- `completedAt`: Set when user clicks "Done" (status → DONE)
-- `statusHistory`: Track all status changes for audit/review context
+### Meeting Object
+```javascript
+{
+  id: string (UUID),
+  title: string,
+  date: string (ISO format: YYYY-MM-DD),
+  time: string (HH:MM format),
+  duration: number (minutes),
+  project: string (optional, null allowed),
+  notes: string (optional),
+  priority: boolean (★ flag for important meetings),
+  recurrence: { type: "never" } (reserved for future)
+}
+```
 
 ### Project Object
-```
+```javascript
 {
-  id: string,
+  id: string (UUID),
   name: string,
-  stages: [
-    { id: string, name: string, order: number }
+  stages: Array[
+    { id, name, order }
   ]
 }
 ```
 
 ### Settings Object
-```
+```javascript
 {
   userName: string,
-  projects: [{ id, name }],
-  statuses: [{ id, name }],
+  projects: Array[{ id, name }],
+  statuses: Array[{ id, name }],
   theme: "light" | "dark"
 }
 ```
@@ -279,133 +212,182 @@ Label: "cmd = mac • ctrl = windows"
 
 ## Storage & Persistence
 
-- **Primary:** localStorage (JSON serialization)
-- **Backup strategy:** Export to JSON (manual save/restore)
-- **No cloud sync** — Intentional design choice
-- All data stays on local machine
+- **Storage engine:** localStorage (JSON serialization)
+- **Data stored:** tasks, meetings, projects, settings, UI state (expanded projects, theme)
+- **Backup strategy:** Export to JSON file (manual, user-initiated)
+- **No cloud sync** — intentional, offline-first design
+- **No external APIs** — all data local
 
 ---
 
 ## UI/UX Details
 
 ### Color Scheme
+**Dark Mode (Default):**
 - **Primary accent:** Sage green (#a6b08a)
 - **Background:** Dark (#2a2a2a)
-- **Cards/Surfaces:** Medium gray (#3d3d3d)
-- **Text:** Light gray (#a6b08a for primary, #7a8a6a for secondary)
-- **State colors (outline only):**
-  - Lavender (working): #c9b8e4
-  - Pink (pending): #e4c5d8
-  - Yellow (flagged): #e8ddb8
-- **Success/completion:** Green (#7aaa6a)
-- **Warning/overdue:** Red-ish (#d4756a)
+- **Cards:** Medium gray (#3d3d3d)
+- **Text primary:** Sage green (#a6b08a)
+- **Text secondary:** Muted (#7a8a6a)
+- **Borders:** Dark gray (#5a6a4a)
+
+**Status Colors (Tasks):**
+- **TO DO:** Gray (#6a7a5a)
+- **IN PROG:** Lavender (#c9b8e4)
+- **PENDING:** Pink (#e4c5d8)
+- **DONE:** Muted gray (#5a6a4a), strikethrough
+- **FLAGGED:** Yellow (#e8ddb8) overlay
+
+**Meeting Colors:**
+- **Default:** Sage green (#a6b08a)
+- **Priority:** Lavender (#c9b8e4)
+
+**Light Mode:**
+- Inverted backgrounds (light) + dark text
+- Sage green accent maintained
+- Better for daytime use
 
 ### Typography
 - **Font:** Monospace (Courier New) for pixel aesthetic
-- **Headings:** 10px-14px bold, ALL CAPS for section headers
-- **Body:** 9px-10px regular
-- **Minimal font weights:** Regular (400) + Bold (500) only
-
-### Borders & Spacing
-- **Borders:** 1px or 2px solid, matching state color
-- **Border-radius:** 0 (hard edges) or minimal (2px)
-- **Spacing:** 8px-12px gaps between elements
-- **Padding:** 10px-14px inside cards
+- **Sizes:** 7px-14px (min-max)
+- **Weights:** 400 (regular) + 700 (bold) only
+- **Case:** ALL CAPS for headers, mixed for content
 
 ### Interactions
-- Hover states: subtle border/text color shift
-- Focus states: visible (outline or highlight)
-- Drag-and-drop: cursor: grab, visual feedback on drag
-- Buttons: transparent bg, border-based style
-
-#### Light Mode (Optional Toggle)
-**Inverted palette while keeping sage green + state colors:**
-- **Primary accent:** Sage green (#a6b08a) — kept same
-- **Background:** Light (#f8f8f8)
-- **Cards/Surfaces:** White (#ffffff)
-- **Sidebar:** Very light gray (#f5f5f5)
-- **Text:** Dark sage (#5a6a4a for primary, #666 for secondary, #888 for tertiary)
-- **Borders:** Light gray (#d0d0d0)
-- **State colors (outline only) — lighter shades:**
-  - Lavender (working): #c9b8e4 (same, works on light bg)
-  - Pink (pending): #e4c5d8 (same, works on light bg)
-  - Yellow (flagged): #d4a76a (warmer tone for light bg, lighter than dark mode's #e8ddb8)
-  - TO DO (gray): #666
-  - IN PROG text: #7a6aa0
-  - PENDING text: #8a5a7a
-- **Success/completion:** Green (#7aaa6a, same)
-
-**Light Mode Benefits:**
-- Better for daytime use + accessibility
-- Keeps sage green as recognizable primary accent
-- State colors (lavender, pink, yellow) still pop on light backgrounds
-- Maintains pixel aesthetic + minimal design
-- Toggle via CSS variables (theme switcher optional)
-
-**Implementation:** Use CSS custom properties to swap between dark/light on page load or with user toggle. See INSTRUCTIONS.md CSS Guidelines section.
+- **Drag-to-reorder:** Grab cursor, visual feedback
+- **Hover states:** Opacity shifts, border highlights
+- **Click targets:** Minimum 24px×24px
+- **Modals:** Overlay with close button + escape key support
+- **Keyboard:** cmd/ctrl+n (new task), cmd/ctrl+d (mark done), cmd/ctrl+w (working on)
 
 ---
 
-## Not Included (Explicitly Out of Scope)
+## Navigation & Sidebar
 
-- ❌ Time tracking / time logged (mentioned but removed for MVP)
-- ❌ Audit trail / change history
-- ❌ Markdown support in notes
-- ❌ Tags
-- ❌ Recurring tasks
-- ❌ Dependencies between tasks
+### Main Navigation (Tabs)
+1. **LIST** - Project-grouped task view
+2. **KANBAN** - Status-column board by project
+3. **TIMELINE** - Project pipeline stages
+4. **CALENDAR** - Weekly meeting planner
+5. **SUMMARY** - Metrics + review table
+6. **SETTINGS** - Configuration
+
+### Sidebar
+- **VIEWS section** - 6 tab buttons
+- **Task stats** - User name, total/active/done counts
+- **Calendar widget** - Today's meetings (★ for priority)
+
+### Header
+- View title + emoji (🕐 LIST, 🕐 KANBAN, 📋 TIMELINE, 📅 CALENDAR, 📊 SUMMARY, ⚙ SETTINGS)
+- Current date/time (updates every second)
+- Theme toggle button (🌙 dark, ☀️ light)
+
+---
+
+## Architecture Notes
+
+### Single-File Design
+- **One HTML file** - `dashboard.html` (~56KB)
+- **All CSS inline** - No external stylesheets
+- **All JS vanilla** - No frameworks, no build step
+- **No CDN dependencies** - Corporate proxy friendly
+- **Self-contained** - Copy file, double-click, works
+
+### State Management
+- **App object** holds all state (tasks, meetings, projects, settings)
+- **localStorage** syncs on every save
+- **No cloud** - intentional choice
+- **Rendering functions** tied to state changes
+
+### Performance
+- Tasks: O(n) render (n = number of tasks)
+- Meetings: O(n) render (n = number of meetings)
+- Storage read: O(1) per view load
+- No external requests - instant load
+
+---
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `cmd/ctrl + n` | Focus new task input |
+| `cmd/ctrl + w` | Toggle "working on" first active task |
+| `cmd/ctrl + d` | Mark first active task as done |
+
+---
+
+## Not Included (Out of Scope)
+
+- ❌ Time tracking (logged hours)
+- ❌ Audit trail (full change history)
+- ❌ Markdown in notes
+- ❌ Tags/labels
+- ❌ Recurring meetings (planned for future)
+- ❌ Task dependencies
 - ❌ Comments/collaboration
 - ❌ Attachments
 - ❌ Cloud sync
-- ❌ Mobile app (single-file HTML only)
+- ❌ Mobile app
+- ❌ Calendar grid view (weekly list is better for mindfulness)
+
+---
+
+## Phase 5: Testing & Polish (Upcoming)
+
+### What Phase 5 Covers
+1. **Cross-view sync** - Changes in one view update everywhere
+2. **Edge cases** - Empty states, long names, special characters
+3. **Performance** - Debouncing, optimization
+4. **Browser compat** - Chrome, Firefox, Safari, Edge
+5. **Mobile responsiveness** (if needed)
+6. **Documentation** - User guide, shortcuts reference
+
+### Success Criteria Phase 5
+- ✅ All views in sync (no stale data)
+- ✅ Empty states handled gracefully
+- ✅ Rapid edits don't cause bugs
+- ✅ Data export/import works perfectly
+- ✅ Browser localStorage limits understood
+- ✅ Zero external dependencies verified
 
 ---
 
 ## Build Stack
 
-- **HTML5** (single file)
-- **CSS** (inline styles + minimal global)
-- **Vanilla JavaScript** (no frameworks)
-- **localStorage** (data persistence)
-- **No external libraries** (corporate-friendly)
+- **HTML5** (semantic markup)
+- **CSS3** (inline + global, CSS variables for theming)
+- **JavaScript ES6+** (vanilla, no transpile needed)
+- **localStorage API** (data persistence)
+- **No external libraries**
 
 ---
 
-## File Structure
+## Success Criteria (Current)
 
-```
-dashboard.html (single file, ~50-80KB)
-├── <style> (CSS for pixel aesthetic + animations)
-├── <body> (HTML structure)
-└── <script> (JS for state, interactions, persistence)
-```
-
----
-
-## Success Criteria
-
-✅ Minimal friction for task creation (< 10 seconds per task)  
-✅ Visual state feedback (color/outline changes on interaction)  
-✅ No external dependencies (corporate proxy friendly)  
+✅ Minimal friction for task capture (< 10 seconds)  
+✅ Minimal friction for meeting capture (< 15 seconds)  
+✅ Visual state feedback (color-coded, emoji indicators)  
+✅ No external dependencies (completely offline)  
 ✅ Local persistence (survives browser restart)  
+✅ Cross-view consistency (LIST ↔ KANBAN ↔ SUMMARY)  
 ✅ Keyboard shortcuts for power users  
-✅ Performance review-ready summary view  
-✅ Pixel aesthetic (intentionally retro)  
+✅ Pixel aesthetic (retro, intentional)  
+✅ Light/dark theme support  
+✅ Mindfulness-first design (focus on today + this week)
 
 ---
 
-## Next Steps
+## Implementation Timeline
 
-1. ✅ Design mockups (COMPLETE)
-2. ⏳ Build single HTML file with localStorage
-3. ⏳ Implement TASKS tab (full CRUD)
-4. ⏳ Implement TIMELINE tab (stage management)
-5. ⏳ Implement SUMMARY tab (metrics + export)
-6. ⏳ Implement SETTINGS tab
-7. ⏳ Add keyboard shortcuts
-8. ⏳ Testing + polish
-9. ⏳ Export feature (PDF/JSON/email)
+| Phase | Feature | Status |
+|-------|---------|--------|
+| 1 | LIST + Task CRUD + Recurrence | ✅ Complete |
+| 2 | KANBAN + Drag-to-status | ✅ Complete |
+| 3 | CALENDAR (weekly) + Meetings | ✅ Complete |
+| 4 | TIMELINE + SUMMARY + SETTINGS | ✅ Complete |
+| 5 | Testing, polish, edge cases | ⏳ Upcoming |
 
 ---
 
-**Ready to build?**
+**Ready for Phase 5 testing!**
