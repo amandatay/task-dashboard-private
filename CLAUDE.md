@@ -1,10 +1,10 @@
 # Task Dashboard - Project Spec
 
-**Status:** Phase 4 Complete - Ready for Phase 5 Testing  
+**Status:** Phase 6 Complete - Ready for Phase 7 (Pomodoro Timer)  
 **User:** Amanda  
 **Created:** 22 Sep 2026  
-**Last Updated:** 22 Sep 2026  
-**Current Build:** Phase 1-4 Complete (LIST, KANBAN, CALENDAR, TIMELINE, SUMMARY, SETTINGS)
+**Last Updated:** 23 Sep 2026  
+**Current Build:** Phase 1-6 Complete (LIST, KANBAN, CALENDAR, TIMELINE, SUMMARY, SETTINGS, Time Tracking, Autosave)
 
 ---
 
@@ -140,6 +140,37 @@ A local HTML-based task management + meeting planner dashboard designed for **mi
 - **Statuses** add/remove/edit (default: TO DO, IN PROG, PENDING, DONE)
 - **Theme toggle** (light/dark mode via CSS variables)
 - **Data export/import** - JSON backups
+
+---
+
+### Phase 5: UI Polish & Bug Fixes ✅
+
+#### Improvements
+- Fixed date field in quick add (now editable, defaults to today)
+- Fixed KANBAN project selector cosmetic feedback (active state updates on click)
+- Improved visual feedback with subtle background highlights
+
+---
+
+### Phase 6: Time Tracking + Autosave ✅
+
+#### Time Tracking
+- **Automatic calculation** from statusHistory timestamps
+- **No manual timer** — tracks duration in each status
+- **Aggregated views:**
+  - Time by Status (TO DO, IN PROG, PENDING, DONE)
+  - Time by Project (total time per project)
+- **Format:** Human-readable (0h, 45min, 2h 30min)
+- **Display location:** SUMMARY tab only
+- **Zero overhead** — uses existing statusHistory data
+
+#### Autosave & Versioning
+- **Automatic backups** every 10 minutes (configurable 5–60 min)
+- **Version control:** Keep up to 10 versions, auto-prune older ones
+- **Auto-restore:** Latest backup restored on page load
+- **Manual restore:** Version history in SETTINGS with restore buttons
+- **Data persistence:** All backups stored locally in browser localStorage
+- **Configurable:** Autosave frequency adjustable in SETTINGS
 
 ---
 
@@ -319,7 +350,7 @@ A local HTML-based task management + meeting planner dashboard designed for **mi
 
 ## Not Included (Out of Scope)
 
-- ❌ Time tracking (logged hours)
+- ❌ Pomodoro timer (planned for Phase 7)
 - ❌ Audit trail (full change history)
 - ❌ Markdown in notes
 - ❌ Tags/labels
@@ -333,23 +364,23 @@ A local HTML-based task management + meeting planner dashboard designed for **mi
 
 ---
 
-## Phase 5: Testing & Polish (Upcoming)
+## Phase 7: Pomodoro Timer (Upcoming)
 
-### What Phase 5 Covers
-1. **Cross-view sync** - Changes in one view update everywhere
-2. **Edge cases** - Empty states, long names, special characters
-3. **Performance** - Debouncing, optimization
-4. **Browser compat** - Chrome, Firefox, Safari, Edge
-5. **Mobile responsiveness** (if needed)
-6. **Documentation** - User guide, shortcuts reference
+### What Phase 7 Covers
+1. **Pomodoro timer** - Integrated timer in TASKS view
+2. **Timer controls** - Start, pause, reset, skip break
+3. **Work/Break cycles** - Configurable duration (default: 25min work, 5min break)
+4. **Sound/notification** - Alert when timer completes
+5. **Session tracking** - Count completed pomodoros per task
+6. **Visual feedback** - Timer display in task card + header
 
-### Success Criteria Phase 5
-- ✅ All views in sync (no stale data)
-- ✅ Empty states handled gracefully
-- ✅ Rapid edits don't cause bugs
-- ✅ Data export/import works perfectly
-- ✅ Browser localStorage limits understood
-- ✅ Zero external dependencies verified
+### Success Criteria Phase 7
+- ✅ Start/stop/pause timer without losing state
+- ✅ Automatic break after completing work session
+- ✅ Auto-switch to next task or stay on current
+- ✅ Timer persists in browser (survives page refresh)
+- ✅ Notification when session complete
+- ✅ Accessible from TASKS tab (LIST or KANBAN view)
 
 ---
 
@@ -386,8 +417,10 @@ A local HTML-based task management + meeting planner dashboard designed for **mi
 | 2 | KANBAN + Drag-to-status | ✅ Complete |
 | 3 | CALENDAR (weekly) + Meetings | ✅ Complete |
 | 4 | TIMELINE + SUMMARY + SETTINGS | ✅ Complete |
-| 5 | Testing, polish, edge cases | ⏳ Upcoming |
+| 5 | UI Polish + Bug Fixes | ✅ Complete |
+| 6 | Time Tracking + Autosave/Versioning | ✅ Complete |
+| 7 | Pomodoro Timer (integrated) | ⏳ Upcoming |
 
 ---
 
-**Ready for Phase 5 testing!**
+**Phase 6 complete. Ready for Phase 7 (Pomodoro Timer)!**
