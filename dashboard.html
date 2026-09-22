@@ -1789,6 +1789,61 @@
         flex-wrap: wrap;
       }
     }
+
+    /* Time Tracking */
+    .time-tracking-section {
+      margin: 20px 0;
+      padding: 12px;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-secondary);
+      border-radius: 2px;
+    }
+
+    .time-tracking-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .time-category {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .time-category-title {
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .time-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 8px;
+      background-color: var(--bg-input);
+      border-radius: 2px;
+      font-size: 9px;
+    }
+
+    .time-item-label {
+      color: var(--text-primary);
+    }
+
+    .time-item-value {
+      color: var(--color-todo);
+      font-weight: bold;
+      font-family: monospace;
+    }
+
+    @media (max-width: 768px) {
+      .time-tracking-content {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -2153,6 +2208,20 @@
             <div id="project-completion-list"></div>
           </div>
 
+          <div class="time-tracking-section">
+            <div class="summary-title">⏱ Time Tracking</div>
+            <div class="time-tracking-content">
+              <div class="time-category">
+                <div class="time-category-title">Time by Status</div>
+                <div id="time-by-status" style="display: flex; flex-direction: column; gap: 6px;"></div>
+              </div>
+              <div class="time-category">
+                <div class="time-category-title">Time by Project</div>
+                <div id="time-by-project" style="display: flex; flex-direction: column; gap: 6px;"></div>
+              </div>
+            </div>
+          </div>
+
           <div class="summary-section">
             <div class="summary-title">Task Details</div>
             <div class="filter-row">
@@ -2230,6 +2299,21 @@
             </div>
           </div>
 
+          <div class="settings-section">
+            <div class="settings-section-title">Backup & Restore</div>
+            <div style="font-size: 9px; color: var(--text-secondary); margin-bottom: 12px;">
+              Automatic backups every 10 minutes (configurable). Keep up to 10 versions.
+            </div>
+            <div class="setting-item">
+              <label>Autosave Frequency (minutes):</label>
+              <input id="autosave-frequency" type="number" min="5" max="60" value="10" style="width: 80px;">
+            </div>
+            <div style="font-size: 9px; color: var(--text-secondary); margin-top: 12px; margin-bottom: 8px;">
+              <strong>Version History:</strong>
+            </div>
+            <div id="backup-list" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-secondary); border-radius: 2px;"></div>
+          </div>
+
           <button class="save-btn" id="save-settings-btn">SAVE</button>
         </div>
       </div>
@@ -2244,7 +2328,9 @@
       tasks: [],
       meetings: [],
       projects: [],
-      settings: {},
+      settings: {
+        autoSaveFrequency: 10 // minutes
+      },
       draggedTaskId: null,
       noteExpandedState: {},
       projectExpandedState: {},
@@ -2255,7 +2341,8 @@
         taskProject: '',
         taskDate: '',
         taskRecurrence: 'never'
-      }
+      },
+      dataBackups: [], // Array of versioned backups
     };
 
     // ===== STORAGE =====
@@ -2266,15 +2353,63 @@
       localStorage.setItem('settings', JSON.stringify(app.settings));
       localStorage.setItem('noteExpandedState', JSON.stringify(app.noteExpandedState));
       localStorage.setItem('projectExpandedState', JSON.stringify(app.projectExpandedState));
+      localStorage.setItem('dataBackups', JSON.stringify(app.dataBackups));
     }
 
     function loadFromStorage() {
       app.tasks = JSON.parse(localStorage.getItem('tasks')) || [];
       app.meetings = JSON.parse(localStorage.getItem('meetings')) || [];
       app.projects = JSON.parse(localStorage.getItem('projects')) || [];
-      app.settings = JSON.parse(localStorage.getItem('settings')) || {};
+      app.settings = JSON.parse(localStorage.getItem('settings')) || { autoSaveFrequency: 10 };
       app.noteExpandedState = JSON.parse(localStorage.getItem('noteExpandedState')) || {};
       app.projectExpandedState = JSON.parse(localStorage.getItem('projectExpandedState')) || {};
+      app.dataBackups = JSON.parse(localStorage.getItem('dataBackups')) || [];
+    }
+
+    function createBackup() {
+      const backup = {
+        timestamp: new Date().toISOString(),
+        versionId: generateUUID().substring(0, 8),
+        taskCount: app.tasks.length,
+        meetingCount: app.meetings.length,
+        data: {
+          tasks: JSON.parse(JSON.stringify(app.tasks)),
+          meetings: JSON.parse(JSON.stringify(app.meetings)),
+          projects: JSON.parse(JSON.stringify(app.projects)),
+          settings: JSON.parse(JSON.stringify(app.settings))
+        }
+      };
+
+      app.dataBackups.push(backup);
+
+      // Keep only last 10 versions
+      if (app.dataBackups.length > 10) {
+        app.dataBackups = app.dataBackups.slice(-10);
+      }
+
+      localStorage.setItem('dataBackups', JSON.stringify(app.dataBackups));
+      return backup;
+    }
+
+    function restoreFromBackup(versionId) {
+      const backup = app.dataBackups.find(b => b.versionId === versionId);
+      if (!backup) {
+        alert('Backup version not found');
+        return false;
+      }
+
+      app.tasks = JSON.parse(JSON.stringify(backup.data.tasks));
+      app.meetings = JSON.parse(JSON.stringify(backup.data.meetings));
+      app.projects = JSON.parse(JSON.stringify(backup.data.projects));
+      app.settings = JSON.parse(JSON.stringify(backup.data.settings));
+
+      saveToStorage();
+      location.reload();
+      return true;
+    }
+
+    function autoSave() {
+      createBackup();
     }
 
     function initDefaults() {
@@ -2539,6 +2674,63 @@
       const formatted = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) +
                        ' • ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ' SGT';
       document.getElementById('header-time').textContent = formatted;
+    }
+
+    function formatDuration(minutes) {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+    }
+
+    function getTimeInStatus(task) {
+      const times = {};
+      app.settings.statuses.forEach(s => times[s.name] = 0);
+
+      if (!task.statusHistory || task.statusHistory.length === 0) return times;
+
+      // Calculate time in each status
+      for (let i = 0; i < task.statusHistory.length; i++) {
+        const current = task.statusHistory[i];
+        const next = task.statusHistory[i + 1];
+
+        const startTime = new Date(current.changedAt).getTime();
+        const endTime = next ? new Date(next.changedAt).getTime() : new Date().getTime();
+        const durationMs = endTime - startTime;
+        const durationMin = Math.max(0, Math.round(durationMs / 60000));
+
+        times[current.status] = (times[current.status] || 0) + durationMin;
+      }
+
+      return times;
+    }
+
+    function getTotalTimeByStatus() {
+      const totals = {};
+      app.settings.statuses.forEach(s => totals[s.name] = 0);
+
+      app.tasks.forEach(task => {
+        const times = getTimeInStatus(task);
+        Object.keys(times).forEach(status => {
+          totals[status] = (totals[status] || 0) + times[status];
+        });
+      });
+
+      return totals;
+    }
+
+    function getTotalTimeByProject() {
+      const totals = {};
+      app.projects.forEach(p => totals[p.name] = 0);
+
+      app.tasks.forEach(task => {
+        const times = getTimeInStatus(task);
+        const totalTime = Object.values(times).reduce((a, b) => a + b, 0);
+        if (task.project) {
+          totals[task.project] = (totals[task.project] || 0) + totalTime;
+        }
+      });
+
+      return totals;
     }
 
     function getTaskCardClass(task) {
@@ -3549,7 +3741,49 @@
       document.getElementById('status-done-pct').textContent = statusPcts['DONE'] + '%';
 
       renderProjectCompletion();
+      renderTimeTracking();
       renderSummaryTable();
+    }
+
+    function renderTimeTracking() {
+      const timeByStatus = getTotalTimeByStatus();
+      const timeByProject = getTotalTimeByProject();
+
+      const statusContainer = document.getElementById('time-by-status');
+      statusContainer.innerHTML = '';
+      Object.keys(timeByStatus).forEach(status => {
+        const minutes = timeByStatus[status];
+        const el = document.createElement('div');
+        el.className = 'time-item';
+        el.innerHTML = `
+          <span class="time-item-label">${status}</span>
+          <span class="time-item-value">${formatDuration(minutes)}</span>
+        `;
+        statusContainer.appendChild(el);
+      });
+
+      const projectContainer = document.getElementById('time-by-project');
+      projectContainer.innerHTML = '';
+      Object.keys(timeByProject).forEach(project => {
+        const minutes = timeByProject[project];
+        if (minutes > 0) {
+          const el = document.createElement('div');
+          el.className = 'time-item';
+          el.innerHTML = `
+            <span class="time-item-label">${project}</span>
+            <span class="time-item-value">${formatDuration(minutes)}</span>
+          `;
+          projectContainer.appendChild(el);
+        }
+      });
+
+      if (Object.values(timeByProject).every(m => m === 0)) {
+        const el = document.createElement('div');
+        el.style.fontSize = '8px';
+        el.style.color = 'var(--text-muted)';
+        el.textContent = 'No time tracked yet';
+        projectContainer.appendChild(el);
+      }
     }
 
     function renderProjectCompletion() {
@@ -3610,12 +3844,61 @@
       });
     }
 
+    function renderBackupList() {
+      const container = document.getElementById('backup-list');
+      container.innerHTML = '';
+
+      document.getElementById('autosave-frequency').value = app.settings.autoSaveFrequency || 10;
+
+      if (app.dataBackups.length === 0) {
+        const el = document.createElement('div');
+        el.style.padding = '8px';
+        el.style.fontSize = '9px';
+        el.style.color = 'var(--text-muted)';
+        el.textContent = 'No backups yet';
+        container.appendChild(el);
+        return;
+      }
+
+      app.dataBackups.slice().reverse().forEach((backup, idx) => {
+        const date = new Date(backup.timestamp);
+        const timeStr = date.toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+
+        const row = document.createElement('div');
+        row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid var(--border-secondary); font-size: 8px;';
+        row.innerHTML = `
+          <div style="flex: 1;">
+            <div style="color: var(--text-primary); font-weight: bold;">${timeStr}</div>
+            <div style="color: var(--text-secondary);">${backup.taskCount} tasks, ${backup.meetingCount} meetings</div>
+          </div>
+          <button class="restore-backup-btn" data-version-id="${backup.versionId}" style="padding: 4px 8px; font-size: 8px; margin-left: 8px;">RESTORE</button>
+        `;
+        container.appendChild(row);
+      });
+
+      document.querySelectorAll('.restore-backup-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const versionId = e.target.getAttribute('data-version-id');
+          if (confirm('Restore this version? Current data will be replaced.')) {
+            restoreFromBackup(versionId);
+          }
+        });
+      });
+    }
+
     function renderSettings() {
       const projectsList = document.getElementById('settings-projects-list');
       const statusesList = document.getElementById('settings-statuses-list');
 
       projectsList.innerHTML = '';
       statusesList.innerHTML = '';
+      renderBackupList();
 
       document.getElementById('settings-username').value = app.settings.userName || '';
 
@@ -4030,10 +4313,16 @@
 
     document.getElementById('save-settings-btn').addEventListener('click', () => {
       app.settings.userName = document.getElementById('settings-username').value;
+      app.settings.autoSaveFrequency = parseInt(document.getElementById('autosave-frequency').value) || 10;
       saveToStorage();
       renderTasks();
       updateStats();
       alert('Settings saved!');
+    });
+
+    document.getElementById('autosave-frequency').addEventListener('change', (e) => {
+      app.settings.autoSaveFrequency = parseInt(e.target.value) || 10;
+      saveToStorage();
     });
 
     document.getElementById('add-project-btn').addEventListener('click', () => {
@@ -4127,10 +4416,26 @@
     loadTheme();
     loadFromStorage();
     initDefaults();
+
+    // Auto-restore latest backup on page load
+    if (app.dataBackups.length > 0) {
+      const latestBackup = app.dataBackups[app.dataBackups.length - 1];
+      if (latestBackup && latestBackup.data) {
+        app.tasks = JSON.parse(JSON.stringify(latestBackup.data.tasks));
+        app.meetings = JSON.parse(JSON.stringify(latestBackup.data.meetings || []));
+        app.projects = JSON.parse(JSON.stringify(latestBackup.data.projects));
+        app.settings = JSON.parse(JSON.stringify(latestBackup.data.settings));
+      }
+    }
+
     populateProjectDropdowns();
     updateSidebarCalendarWidget();
     updateClock();
     setInterval(updateClock, 1000);
+
+    // Initialize autosave interval
+    const autoSaveFrequency = app.settings.autoSaveFrequency || 10;
+    setInterval(autoSave, autoSaveFrequency * 60000);
 
     // Load saved tasks view preference
     app.currentTasksView = localStorage.getItem('currentTasksView') || 'list';
