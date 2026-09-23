@@ -259,7 +259,7 @@
       border: 2px solid;
       padding: 10px;
       display: grid;
-      grid-template-columns: 20px 1fr 100px 100px 60px auto auto auto 20px;
+      grid-template-columns: 20px 1fr 100px 80px 60px auto auto auto 20px;
       gap: 8px;
       align-items: center;
       transition: all 0.2s;
@@ -1852,7 +1852,7 @@
       <div class="sidebar-title">📋 VIEWS</div>
       <div class="nav-tabs">
         <button class="nav-tab active" data-tab="tasks">TASKS</button>
-        <button class="nav-tab" data-tab="timeline">TIMELINE</button>
+        <button class="nav-tab" data-tab="timeline">PROJECTS</button>
         <button class="nav-tab" data-tab="calendar">CALENDAR</button>
         <button class="nav-tab" data-tab="summary">SUMMARY</button>
         <button class="nav-tab" data-tab="settings">SETTINGS</button>
@@ -1896,6 +1896,14 @@
 
             <!-- Advanced Options (Expandable) -->
             <div id="quickAddAdvanced" class="quick-add-advanced" style="display: none;">
+              <!-- Stream Select -->
+              <div class="advanced-row">
+                <label class="advanced-label">Stream:</label>
+                <select id="task-stream" class="recurrence-type-select">
+                  <option value="">-- No Stream --</option>
+                </select>
+              </div>
+
               <!-- Recurrence Type Select -->
               <div class="advanced-row">
                 <label class="advanced-label">Recurrence:</label>
@@ -2817,6 +2825,11 @@
 
             const buttonText = task.status === 'TO DO' ? 'Start working' : task.status === 'IN PROG' ? 'Done' : 'Start working';
 
+            const projectObj = app.projects.find(p => p.name === task.project);
+            const stageOptions = projectObj && projectObj.stages ?
+              projectObj.stages.map(s => `<option value="${s.name}" ${task.stage === s.name ? 'selected' : ''}>${s.name}</option>`).join('') :
+              '';
+
             card.innerHTML = `
               <div class="drag-handle" draggable="true">⋮⋮</div>
               <div>
@@ -2825,6 +2838,10 @@
               </div>
               <select class="task-status" data-task-id="${task.id}">
                 ${app.settings.statuses.map(s => `<option value="${s.name}" ${task.status === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
+              </select>
+              <select class="task-stream" data-task-id="${task.id}" style="padding: 4px; background-color: var(--bg-input); border: 1px solid; border-color: inherit; color: inherit; font-family: 'Courier New', monospace; font-size: 9px; cursor: pointer;">
+                <option value="">--</option>
+                ${stageOptions}
               </select>
               <div class="task-date">${formatDate(task.dueDate)}</div>
               ${renderNotesControl(task)}
@@ -2873,6 +2890,11 @@
               card.className = `task-card ${cardClass}`;
               card.setAttribute('data-task-id', task.id);
 
+              const projectObj = app.projects.find(p => p.name === task.project);
+              const stageOptions = projectObj && projectObj.stages ?
+                projectObj.stages.map(s => `<option value="${s.name}" ${task.stage === s.name ? 'selected' : ''}>${s.name}</option>`).join('') :
+                '';
+
               card.innerHTML = `
                 <div class="drag-handle" draggable="true">⋮⋮</div>
                 <div>
@@ -2881,6 +2903,10 @@
                 </div>
                 <select class="task-status" data-task-id="${task.id}">
                   ${app.settings.statuses.map(s => `<option value="${s.name}" ${task.status === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
+                </select>
+                <select class="task-stream" data-task-id="${task.id}" style="padding: 4px; background-color: var(--bg-input); border: 1px solid; border-color: inherit; color: inherit; font-family: 'Courier New', monospace; font-size: 9px; cursor: pointer;">
+                  <option value="">--</option>
+                  ${stageOptions}
                 </select>
                 <div class="task-date">${formatDate(task.dueDate)}</div>
                 ${renderNotesControl(task)}
@@ -3566,6 +3592,19 @@
         });
       });
 
+      // Stream dropdown
+      document.querySelectorAll('.task-stream').forEach(select => {
+        select.addEventListener('change', (e) => {
+          const taskId = e.target.getAttribute('data-task-id');
+          const task = app.tasks.find(t => t.id === taskId);
+          if (task) {
+            task.stage = e.target.value || '';
+            saveToStorage();
+            renderTasks();
+          }
+        });
+      });
+
       // Task buttons
       document.querySelectorAll('.task-button').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -4182,7 +4221,7 @@
 
       const titles = {
         'tasks': '🕐 TASKS',
-        'timeline': '📋 TIMELINE',
+        'timeline': '📋 PROJECTS',
         'calendar': '📅 CALENDAR',
         'summary': '📊 SUMMARY',
         'settings': '⚙ SETTINGS'
@@ -4211,6 +4250,7 @@
       const title = document.getElementById('task-title').value;
       const project = document.getElementById('task-project').value;
       const dueDate = document.getElementById('task-date').value || getToday();
+      const stream = document.getElementById('task-stream').value || '';
       const recurrenceType = document.getElementById('task-recurrence').value;
 
       let recurrence = { type: recurrenceType };
@@ -4255,10 +4295,18 @@
         }
       }
 
-      if (createTask(title, project, dueDate, recurrence)) {
+      const newTask = createTask(title, project, dueDate, recurrence);
+      if (newTask) {
+        // Set stream if provided
+        if (stream) {
+          newTask.stage = stream;
+          saveToStorage();
+        }
+
         // Clear form
         document.getElementById('task-title').value = '';
         document.getElementById('task-project').value = '';
+        document.getElementById('task-stream').innerHTML = '<option value="">-- No Stream --</option>';
         document.getElementById('task-date').value = getToday();
         document.getElementById('task-recurrence').value = 'never';
 
@@ -4398,6 +4446,25 @@
 
     // Theme toggle
     document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
+
+    // Project dropdown change - update stream options
+    document.getElementById('task-project').addEventListener('change', (e) => {
+      const projectName = e.target.value;
+      const streamSelect = document.getElementById('task-stream');
+      streamSelect.innerHTML = '<option value="">-- No Stream --</option>';
+
+      if (projectName) {
+        const project = app.projects.find(p => p.name === projectName);
+        if (project && project.stages) {
+          project.stages.forEach(stage => {
+            const option = document.createElement('option');
+            option.value = stage.name;
+            option.textContent = stage.name;
+            streamSelect.appendChild(option);
+          });
+        }
+      }
+    });
 
     // Modal close on overlay click
     document.getElementById('taskModal').addEventListener('click', (e) => {
