@@ -362,6 +362,14 @@ A local HTML-based task management + meeting planner dashboard designed for **mi
 - ❌ Mobile app
 - ❌ Calendar grid view (weekly list is better for mindfulness)
 
+## Future Enhancements (Backlog)
+
+- **Streams as tags** — Allow tasks to have multiple streams (currently 1 per task)
+- **Drag-to-bulk-assign** — Drag multiple selected tasks onto stream card to assign
+- **Stream filtering** — Filter tasks by stream across all views
+- **Stream colors** — Color-code streams for quick visual identification
+- **Quick stream add** — Add new stream from task modal without leaving view
+
 ---
 
 ## Phase 7: Pomodoro Timer (Upcoming)

@@ -2357,6 +2357,7 @@
         taskRecurrence: 'never'
       },
       dataBackups: [], // Array of versioned backups
+      expandedStreamId: null, // Track which stream is expanded in PROJECTS view
     };
 
     // ===== STORAGE =====
@@ -3740,29 +3741,66 @@
         const stageTasks = app.tasks.filter(t => t.project === project.name && t.stage === stage.name);
         const completedTasks = stageTasks.filter(t => t.status === 'DONE');
         const completionPct = stageTasks.length > 0 ? Math.round((completedTasks.length / stageTasks.length) * 100) : 0;
+        const isExpanded = app.expandedStreamId === stage.id;
 
         const stageEl = document.createElement('div');
         stageEl.className = completionPct === 100 ? 'stage complete' : 'stage';
-        stageEl.innerHTML = `
-          <div class="stage-header">
-            <div class="stage-name">${stage.name}</div>
+        stageEl.style.position = 'relative';
+
+        const headerHTML = `
+          <div class="stage-header" style="cursor: pointer; user-select: none;">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+              <span style="font-size: 11px; color: var(--text-secondary);">${isExpanded ? '▼' : '▶'}</span>
+              <div class="stage-name">${stage.name}</div>
+            </div>
             <div class="stage-actions">
-              <button class="stage-btn" data-stage-id="${stage.id}" data-action="edit">⋮</button>
-              <button class="stage-btn" data-stage-id="${stage.id}" data-action="delete">×</button>
+              <button class="stage-btn" data-stage-id="${stage.id}" data-action="edit" style="pointer-events: auto;">⋮</button>
+              <button class="stage-btn" data-stage-id="${stage.id}" data-action="delete" style="pointer-events: auto;">×</button>
             </div>
           </div>
           <div class="progress-bar">
             <div class="progress-fill" style="width: ${completionPct}%"></div>
           </div>
           <div class="stage-count">${completedTasks.length}/${stageTasks.length} tasks</div>
-          <div class="task-preview">
-            ${stageTasks.map(task => `
-              <div class="preview-item ${task.status === 'DONE' ? 'preview-done' : ''}">
-                ${task.status === 'DONE' ? '✓' : '•'} ${task.title}
-              </div>
-            `).join('')}
-          </div>
         `;
+
+        if (isExpanded) {
+          const allProjectTasks = app.tasks.filter(t => t.project === project.name);
+          const taskListHTML = `
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-secondary);">
+              <div style="font-size: 9px; font-weight: bold; color: var(--text-primary); margin-bottom: 8px;">Assign tasks to this stream:</div>
+              <div style="display: flex; flex-direction: column; gap: 6px; max-height: 300px; overflow-y: auto; margin-bottom: 8px;">
+                ${allProjectTasks.map(task => `
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 6px; background-color: var(--bg-input); border-radius: 2px; font-size: 9px;">
+                    <input type="checkbox" class="stream-task-checkbox" data-task-id="${task.id}" data-stream-id="${stage.id}" ${task.stage === stage.name ? 'checked' : ''} style="cursor: pointer;">
+                    <span>${task.title}</span>
+                  </label>
+                `).join('')}
+              </div>
+              <button class="stage-btn" data-stream-id="${stage.id}" data-action="bulk-assign" style="width: 100%; padding: 8px; font-weight: bold; pointer-events: auto;">ASSIGN SELECTED</button>
+            </div>
+          `;
+          stageEl.innerHTML = headerHTML + taskListHTML;
+        } else {
+          stageEl.innerHTML = headerHTML + `
+            <div class="task-preview">
+              ${stageTasks.map(task => `
+                <div class="preview-item ${task.status === 'DONE' ? 'preview-done' : ''}">
+                  ${task.status === 'DONE' ? '✓' : '•'} ${task.title}
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        // Toggle expand on header click
+        stageEl.querySelector('.stage-header').addEventListener('click', (e) => {
+          if (!e.target.closest('.stage-actions')) {
+            app.expandedStreamId = isExpanded ? null : stage.id;
+            renderPipeline(projectId);
+          }
+        });
+
         pipeline.appendChild(stageEl);
       });
 
@@ -3804,6 +3842,33 @@
             deleteProjectStage(projectId, stageId);
             renderPipeline(projectId);
           }
+        });
+      });
+
+      document.querySelectorAll('[data-action="bulk-assign"]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const streamId = e.target.getAttribute('data-stream-id');
+          const stream = project.stages.find(s => s.id === streamId);
+          if (!stream) return;
+
+          const selectedCheckboxes = document.querySelectorAll('.stream-task-checkbox:checked');
+          if (selectedCheckboxes.length === 0) {
+            alert('Please select at least one task');
+            return;
+          }
+
+          selectedCheckboxes.forEach(checkbox => {
+            const taskId = checkbox.getAttribute('data-task-id');
+            const task = app.tasks.find(t => t.id === taskId);
+            if (task) {
+              task.stage = stream.name;
+            }
+          });
+
+          saveToStorage();
+          app.expandedStreamId = null;
+          renderPipeline(projectId);
         });
       });
     }
