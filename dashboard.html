@@ -2085,7 +2085,7 @@
             </div>
 
             <div class="modal-field">
-              <label class="modal-field-label">Stage (optional)</label>
+              <label class="modal-field-label">Stream (optional)</label>
               <select id="modalTaskStage" class="modal-field-value" style="width: 100%; padding: 6px 8px; font-family: 'Courier New', monospace; font-size: 9px; background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-secondary); border-radius: 2px;">
               </select>
             </div>
@@ -3528,6 +3528,25 @@
     }
 
     function attachTaskEventListeners() {
+      // Click to open task modal (LIST view only)
+      document.querySelectorAll('.task-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+          // Don't open modal if clicking on buttons, selects, or drag handle
+          if (e.target.closest('.task-button') ||
+              e.target.closest('.task-delete') ||
+              e.target.closest('.drag-handle') ||
+              e.target.closest('.task-status') ||
+              e.target.closest('.task-stream') ||
+              e.target.closest('.task-notes-control')) {
+            return;
+          }
+          const taskId = card.getAttribute('data-task-id');
+          if (taskId) {
+            openTaskModal(taskId);
+          }
+        });
+      });
+
       // Drag and drop
       document.querySelectorAll('.task-card').forEach(card => {
         card.addEventListener('dragstart', (e) => {
@@ -3750,12 +3769,12 @@
       const addStageBtn = document.createElement('div');
       addStageBtn.className = 'stage';
       addStageBtn.innerHTML = `
-        <button class="stage-btn" style="width: 100%; text-align: center;">+ ADD STAGE</button>
+        <button class="stage-btn" style="width: 100%; text-align: center;">+ ADD STREAM</button>
       `;
       addStageBtn.querySelector('button').addEventListener('click', () => {
-        const stageName = prompt('Stage name:');
-        if (stageName) {
-          addProjectStage(projectId, stageName);
+        const streamName = prompt('Stream name:');
+        if (streamName) {
+          addProjectStage(projectId, streamName);
           renderPipeline(projectId);
         }
       });
