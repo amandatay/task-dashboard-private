@@ -2077,6 +2077,12 @@
             </div>
 
             <div class="modal-field">
+              <label class="modal-field-label">Stage (optional)</label>
+              <select id="modalTaskStage" class="modal-field-value" style="width: 100%; padding: 6px 8px; font-family: 'Courier New', monospace; font-size: 9px; background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-secondary); border-radius: 2px;">
+              </select>
+            </div>
+
+            <div class="modal-field">
               <label class="modal-field-label">Notes</label>
               <textarea id="modalTaskNotes" class="modal-field-value" style="width: 100%; padding: 6px 8px; font-family: 'Courier New', monospace; font-size: 9px; background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-secondary); border-radius: 2px; resize: vertical; min-height: 80px;" placeholder="Add notes..."></textarea>
             </div>
@@ -3127,6 +3133,22 @@
       });
       statusSelect.value = task.status;
 
+      // Setup stage dropdown (optional)
+      const stageSelect = document.getElementById('modalTaskStage');
+      stageSelect.innerHTML = '<option value="">-- No Stage --</option>';
+
+      // Get all stages from the task's project
+      const projectObj = app.projects.find(p => p.name === task.project);
+      if (projectObj && projectObj.stages) {
+        projectObj.stages.forEach(stage => {
+          const option = document.createElement('option');
+          option.value = stage.name;
+          option.textContent = stage.name;
+          stageSelect.appendChild(option);
+        });
+      }
+      stageSelect.value = task.stage || '';
+
       // Modal buttons
       document.getElementById('modalSaveBtn').onclick = () => saveTaskFromModal(taskId);
       document.getElementById('modalFlagBtn').onclick = () => toggleTaskFlag(taskId);
@@ -3148,6 +3170,7 @@
         task.status = document.getElementById('modalTaskStatus').value;
         task.dueDate = document.getElementById('modalTaskDate').value;
         task.notes = document.getElementById('modalTaskNotes').value;
+        task.stage = document.getElementById('modalTaskStage').value || '';
         saveToStorage();
         renderKanbanView();
         closeTaskModal();
