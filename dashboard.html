@@ -3766,26 +3766,31 @@
         pipeline.appendChild(stageEl);
       });
 
-      const addStageBtn = document.createElement('div');
-      addStageBtn.className = 'stage';
-      addStageBtn.innerHTML = `
-        <button class="stage-btn" style="width: 100%; text-align: center;">+ ADD STREAM</button>
-      `;
-      addStageBtn.querySelector('button').addEventListener('click', () => {
-        const streamName = prompt('Stream name:');
-        if (streamName) {
-          addProjectStage(projectId, streamName);
+      const addStreamBtn = document.createElement('div');
+      addStreamBtn.className = 'stage';
+      const addStreamBtnElement = document.createElement('button');
+      addStreamBtnElement.className = 'stage-btn';
+      addStreamBtnElement.textContent = '+ ADD STREAM';
+      addStreamBtnElement.style.width = '100%';
+      addStreamBtnElement.style.textAlign = 'center';
+      addStreamBtnElement.style.cursor = 'pointer';
+      addStreamBtnElement.addEventListener('click', () => {
+        const streamName = prompt('Enter stream name:');
+        if (streamName && streamName.trim()) {
+          addProjectStage(projectId, streamName.trim());
           renderPipeline(projectId);
         }
       });
-      pipeline.appendChild(addStageBtn);
+      addStreamBtn.appendChild(addStreamBtnElement);
+      pipeline.appendChild(addStreamBtn);
 
       document.querySelectorAll('[data-action="edit"]').forEach(btn => {
         btn.addEventListener('click', (e) => {
+          e.stopPropagation();
           const stageId = e.target.getAttribute('data-stage-id');
-          const stageName = prompt('Edit stage name:');
-          if (stageName) {
-            updateProjectStage(projectId, stageId, stageName);
+          const streamName = prompt('Edit stream name:');
+          if (streamName && streamName.trim()) {
+            updateProjectStage(projectId, stageId, streamName.trim());
             renderPipeline(projectId);
           }
         });
@@ -3793,8 +3798,9 @@
 
       document.querySelectorAll('[data-action="delete"]').forEach(btn => {
         btn.addEventListener('click', (e) => {
+          e.stopPropagation();
           const stageId = e.target.getAttribute('data-stage-id');
-          if (confirm('Delete stage?')) {
+          if (confirm('Delete this stream?')) {
             deleteProjectStage(projectId, stageId);
             renderPipeline(projectId);
           }
