@@ -3457,7 +3457,7 @@
               <div class="drag-handle" draggable="true">⋮⋮</div>
               <div>
                 <div class="task-title">${getRecurrenceDisplay(task)} ${task.title}</div>
-                <div class="task-meta">${task.project}${task.stage ? ' → ' + task.stage : ''}</div>
+                <div class="task-meta">${task.project}${task.stage ? ' → ' + task.stage : ''}${task.pomodoroCount > 0 ? ` • 🍅 ${task.pomodoroCount}` : ''}</div>
               </div>
               <select class="task-status" data-task-id="${task.id}">
                 ${app.settings.statuses.map(s => `<option value="${s.name}" ${task.status === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
@@ -3531,7 +3531,7 @@
                 <div class="drag-handle" draggable="true">⋮⋮</div>
                 <div>
                   <div class="task-title">${getRecurrenceDisplay(task)} ${task.title}</div>
-                  <div class="task-meta">${task.project}${task.stage ? ' → ' + task.stage : ''}</div>
+                  <div class="task-meta">${task.project}${task.stage ? ' → ' + task.stage : ''}${task.pomodoroCount > 0 ? ` • 🍅 ${task.pomodoroCount}` : ''}</div>
                 </div>
                 <select class="task-status" data-task-id="${task.id}">
                   ${app.settings.statuses.map(s => `<option value="${s.name}" ${task.status === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
@@ -3763,7 +3763,7 @@
 
           parentCard.innerHTML = `
             <div class="kanban-task-title">${recurrenceBadge} ${parentTask.title}</div>
-            <div class="kanban-task-meta">${parentTask.stage ? parentTask.stage : 'no stage'}${subtaskCount > 0 ? ` • ${subtaskCount} subtask${subtaskCount !== 1 ? 's' : ''}` : ''}</div>
+            <div class="kanban-task-meta">${parentTask.stage ? parentTask.stage : 'no stage'}${subtaskCount > 0 ? ` • ${subtaskCount} subtask${subtaskCount !== 1 ? 's' : ''}` : ''}${parentTask.pomodoroCount > 0 ? ` • 🍅 ${parentTask.pomodoroCount}` : ''}</div>
             <div class="kanban-task-date">${formatDate(parentTask.dueDate)}</div>
           `;
 
@@ -3785,7 +3785,7 @@
             const recurrenceBadge = getRecurrenceDisplay(subtask);
             subtaskCard.innerHTML = `
               <div class="kanban-task-title">├─ ${recurrenceBadge} ${subtask.title}</div>
-              <div class="kanban-task-meta">${subtask.stage ? subtask.stage : 'no stage'}</div>
+              <div class="kanban-task-meta">${subtask.stage ? subtask.stage : 'no stage'}${subtask.pomodoroCount > 0 ? ` • 🍅 ${subtask.pomodoroCount}` : ''}</div>
               <div class="kanban-task-date">${formatDate(subtask.dueDate)}</div>
             `;
 
@@ -3809,7 +3809,7 @@
           const recurrenceBadge = getRecurrenceDisplay(orphanSubtask);
           card.innerHTML = `
             <div class="kanban-task-title">${recurrenceBadge} ${orphanSubtask.title}</div>
-            <div class="kanban-task-meta">${orphanSubtask.stage ? orphanSubtask.stage : 'no stage'}</div>
+            <div class="kanban-task-meta">${orphanSubtask.stage ? orphanSubtask.stage : 'no stage'}${orphanSubtask.pomodoroCount > 0 ? ` • 🍅 ${orphanSubtask.pomodoroCount}` : ''}</div>
             <div class="kanban-task-date">${formatDate(orphanSubtask.dueDate)}</div>
           `;
 
