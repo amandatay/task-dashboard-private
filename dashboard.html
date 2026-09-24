@@ -2954,7 +2954,7 @@
     }
 
     // ===== TASK MANAGEMENT =====
-    function createTask(title, project, dueDate, recurrence = { type: 'never' }) {
+    function createTask(title, project, dueDate, recurrence = { type: 'never' }, parentTaskId = null) {
       if (!title || !project) return null;
       const task = {
         id: generateUUID(),
@@ -2968,8 +2968,7 @@
         focusTagged: false,
         recurrence: recurrence || { type: 'never' },
         recurrenceParentId: null,
-        parentTaskId: null,
-        subtasks: [],
+        parentTaskId: parentTaskId,
         createdAt: new Date().toISOString(),
         startedAt: null,
         completedAt: null,
@@ -3064,85 +3063,34 @@
       saveToStorage();
     }
 
-    // ===== SUBTASKS =====
-    function addSubtask(parentTaskId, title) {
-      const parent = app.tasks.find(t => t.id === parentTaskId);
-      if (!parent || !title.trim()) return null;
-
-      if (!parent.subtasks) {
-        parent.subtasks = [];
-      }
-
-      const subtask = {
-        id: generateUUID(),
-        title: title.trim(),
-        status: 'TO DO',
-        createdAt: new Date().toISOString(),
-        completedAt: null
-      };
-
-      parent.subtasks.push(subtask);
-      saveToStorage();
-      return subtask;
+    // ===== SUBTASKS (Full Task Objects with parentTaskId) =====
+    function getSubtasks(parentTaskId) {
+      return app.tasks.filter(t => t.parentTaskId === parentTaskId);
     }
 
-    function updateSubtaskStatus(parentTaskId, subtaskId, status) {
-      const parent = app.tasks.find(t => t.id === parentTaskId);
-      if (!parent) return;
-
-      const subtask = parent.subtasks.find(s => s.id === subtaskId);
-      if (!subtask) return;
-
-      subtask.status = status;
-      if (status === 'DONE' && !subtask.completedAt) {
-        subtask.completedAt = new Date().toISOString();
-      } else if (status !== 'DONE') {
-        subtask.completedAt = null;
-      }
-
-      // Auto-update parent status if any subtask is IN PROG
-      if (parent.subtasks.some(s => s.status === 'IN PROG') && parent.status === 'TO DO') {
-        parent.status = 'IN PROG';
-        if (!parent.startedAt) {
-          parent.startedAt = new Date().toISOString();
-        }
-        parent.statusHistory.push({ status: 'IN PROG', changedAt: new Date().toISOString() });
-      }
-
-      saveToStorage();
-    }
-
-    function deleteSubtask(parentTaskId, subtaskId) {
-      const parent = app.tasks.find(t => t.id === parentTaskId);
-      if (!parent) return;
-
-      parent.subtasks = parent.subtasks.filter(s => s.id !== subtaskId);
-      saveToStorage();
-    }
-
-    function getSubtaskProgress(parent) {
-      if (!parent.subtasks || parent.subtasks.length === 0) {
+    function getSubtaskProgress(parentTaskId) {
+      const subtasks = getSubtasks(parentTaskId);
+      if (subtasks.length === 0) {
         return { done: 0, total: 0, percent: 0 };
       }
 
-      const total = parent.subtasks.length;
-      const done = parent.subtasks.filter(s => s.status === 'DONE').length;
+      const total = subtasks.length;
+      const done = subtasks.filter(s => s.status === 'DONE').length;
       const percent = Math.round((done / total) * 100);
 
       return { done, total, percent };
     }
 
-    function renderSubtaskProgress(parent) {
-      const progress = getSubtaskProgress(parent);
+    function renderSubtaskIndicator(parentId) {
+      const progress = getSubtaskProgress(parentId);
       if (progress.total === 0) return '';
 
       const filled = Math.round((progress.percent / 100) * 8);
-      const empty = 8 - filled;
-      const bar = '█'.repeat(filled) + '░'.repeat(empty);
+      const bar = '█'.repeat(filled) + '░'.repeat(8 - filled);
 
       return `
-        <div class="subtasks-indicator" data-task-id="${parent.id}">
-          <span class="subtasks-chevron" data-collapsed="false">▼</span>
+        <div class="subtasks-indicator" data-task-id="${parentId}">
+          <span class="subtasks-chevron">▼</span>
           <span class="subtasks-progress">
             <span class="progress-text">${progress.total} subtask${progress.total !== 1 ? 's' : ''}</span>
             <span class="progress-bar">${bar} ${progress.percent}%</span>
@@ -3151,31 +3099,37 @@
       `;
     }
 
-    function renderSubtasksContainer(parent) {
-      if (!parent.subtasks || parent.subtasks.length === 0) return '';
+    function renderSubtaskContainer(parentId) {
+      const subtasks = getSubtasks(parentId);
+      if (subtasks.length === 0) return '';
 
-      let html = `<div class="subtasks-container" data-parent-id="${parent.id}">`;
+      let html = `<div class="subtasks-container" data-parent-id="${parentId}" style="display: none;">`;
 
-      parent.subtasks.forEach(subtask => {
+      subtasks.forEach(subtask => {
         html += `
-          <div class="subtask-row" data-subtask-id="${subtask.id}">
+          <div class="subtask-row" data-task-id="${subtask.id}">
             <span class="subtask-indent">├─</span>
             <span class="subtask-title">${subtask.title}</span>
-            <select class="subtask-status-select" data-subtask-id="${subtask.id}" data-parent-id="${parent.id}">
+            <select class="subtask-status-select" data-task-id="${subtask.id}">
               <option value="TO DO" ${subtask.status === 'TO DO' ? 'selected' : ''}>TO DO</option>
               <option value="IN PROG" ${subtask.status === 'IN PROG' ? 'selected' : ''}>IN PROG</option>
               <option value="PENDING" ${subtask.status === 'PENDING' ? 'selected' : ''}>PENDING</option>
               <option value="DONE" ${subtask.status === 'DONE' ? 'selected' : ''}>DONE</option>
             </select>
-            <button class="btn-delete-subtask" data-subtask-id="${subtask.id}" data-parent-id="${parent.id}">×</button>
+            <span class="subtask-date">${subtask.dueDate || '-'}</span>
+            <button class="btn-flag-subtask" data-task-id="${subtask.id}" title="Priority">
+              ${subtask.priority ? '🚩' : '○'}
+            </button>
+            <button class="btn-delete-subtask" data-task-id="${subtask.id}">×</button>
           </div>
         `;
       });
 
       html += `
         <div class="add-subtask-row">
-          <input type="text" class="add-subtask-input" placeholder="Add subtask..." data-parent-id="${parent.id}" />
-          <button class="btn-add-subtask" data-parent-id="${parent.id}">+</button>
+          <span class="subtask-indent">├─</span>
+          <input type="text" class="add-subtask-input" placeholder="Add subtask..." data-parent-id="${parentId}" />
+          <button class="btn-add-subtask-inline" data-parent-id="${parentId}">+</button>
         </div>
       </div>`;
 
@@ -3428,18 +3382,17 @@
             tasksContainer.appendChild(card);
 
             // Handle subtasks display
-            if (task.subtasks && task.subtasks.length > 0) {
+            // Handle subtasks
+            const subtasks = getSubtasks(task.id);
+            if (subtasks.length > 0) {
               // Show progress indicator for existing subtasks
               const progressDiv = document.createElement('div');
-              progressDiv.innerHTML = renderSubtaskProgress(task);
+              progressDiv.innerHTML = renderSubtaskIndicator(task.id);
               tasksContainer.appendChild(progressDiv);
 
               // Add subtasks container (hidden by default)
               const subtasksDiv = document.createElement('div');
-              subtasksDiv.innerHTML = renderSubtasksContainer(task);
-              subtasksDiv.style.display = 'none';
-              subtasksDiv.className = 'subtasks-container-wrapper';
-              subtasksDiv.setAttribute('data-parent-id', task.id);
+              subtasksDiv.innerHTML = renderSubtaskContainer(task.id);
               tasksContainer.appendChild(subtasksDiv);
             } else {
               // Show "Add Subtask" button for tasks without subtasks
@@ -3448,7 +3401,7 @@
               addSubtaskDiv.setAttribute('data-parent-id', task.id);
               addSubtaskDiv.innerHTML = `
                 <button class="btn-add-first-subtask" data-parent-id="${task.id}">
-                  + Add Subtask
+                  +subtask
                 </button>
               `;
               tasksContainer.appendChild(addSubtaskDiv);
@@ -3520,17 +3473,15 @@
               doneSection.appendChild(card);
 
               // Add subtasks progress indicator
-              if (task.subtasks && task.subtasks.length > 0) {
+              const subtasks = getSubtasks(task.id);
+              if (subtasks.length > 0) {
                 const progressDiv = document.createElement('div');
-                progressDiv.innerHTML = renderSubtaskProgress(task);
+                progressDiv.innerHTML = renderSubtaskIndicator(task.id);
                 doneSection.appendChild(progressDiv);
 
                 // Add subtasks container (hidden by default)
                 const subtasksDiv = document.createElement('div');
-                subtasksDiv.innerHTML = renderSubtasksContainer(task);
-                subtasksDiv.style.display = 'none';
-                subtasksDiv.className = 'subtasks-container-wrapper';
-                subtasksDiv.setAttribute('data-parent-id', task.id);
+                subtasksDiv.innerHTML = renderSubtaskContainer(task.id);
                 doneSection.appendChild(subtasksDiv);
               }
 
@@ -4374,15 +4325,39 @@
       });
 
       // Subtask status change
+      // Expand/collapse subtasks container
+      document.querySelectorAll('.subtasks-indicator').forEach(indicator => {
+        indicator.addEventListener('click', (e) => {
+          const parentId = indicator.dataset.taskId;
+          const container = document.querySelector(`.subtasks-container[data-parent-id="${parentId}"]`);
+          if (container) {
+            const isHidden = container.style.display === 'none';
+            container.style.display = isHidden ? 'block' : 'none';
+            const chevron = indicator.querySelector('.subtasks-chevron');
+            chevron.textContent = isHidden ? '▼' : '▶';
+          }
+        });
+      });
+
+      // Change subtask status
       document.querySelectorAll('.subtask-status-select').forEach(select => {
         select.addEventListener('change', (e) => {
-          const parentId = e.target.dataset.parentId;
-          const subtaskId = e.target.dataset.subtaskId;
+          const subtaskId = e.target.dataset.taskId;
           const newStatus = e.target.value;
+          const task = app.tasks.find(t => t.id === subtaskId);
 
-          updateSubtaskStatus(parentId, subtaskId, newStatus);
-          renderTasks();
-          renderSummary();
+          if (task) {
+            task.status = newStatus;
+            if (newStatus === 'DONE' && !task.completedAt) {
+              task.completedAt = new Date().toISOString();
+            } else if (newStatus !== 'DONE') {
+              task.completedAt = null;
+            }
+            task.statusHistory.push({ status: newStatus, changedAt: new Date().toISOString() });
+            saveToStorage();
+            renderTasks();
+            renderSummary();
+          }
         });
       });
 
@@ -4393,12 +4368,26 @@
           const parentId = btn.dataset.parentId;
           const parent = app.tasks.find(t => t.id === parentId);
           if (parent) {
-            // Initialize subtasks array if needed
-            if (!parent.subtasks) {
-              parent.subtasks = [];
-            }
-            // Add first empty subtask
-            addSubtask(parentId, 'New subtask');
+            const newSubtask = {
+              id: generateUUID(),
+              title: '',
+              project: parent.project,
+              stage: parent.stage || '',
+              status: 'TO DO',
+              dueDate: null,
+              notes: '',
+              priority: false,
+              focusTagged: false,
+              recurrence: { type: 'never' },
+              recurrenceParentId: null,
+              parentTaskId: parentId,
+              createdAt: new Date().toISOString(),
+              startedAt: null,
+              completedAt: null,
+              statusHistory: [{ status: 'TO DO', changedAt: new Date().toISOString() }],
+              order: app.tasks.length
+            };
+            app.tasks.push(newSubtask);
             saveToStorage();
             renderTasks();
             renderSummary();
@@ -4406,33 +4395,71 @@
         });
       });
 
-      // Subtask delete
+      // Toggle subtask priority flag
+      document.querySelectorAll('.btn-flag-subtask').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const taskId = btn.dataset.taskId;
+          const task = app.tasks.find(t => t.id === taskId);
+          if (task) {
+            task.priority = !task.priority;
+            saveToStorage();
+            btn.textContent = task.priority ? '🚩' : '○';
+          }
+        });
+      });
+
+      // Delete subtask
       document.querySelectorAll('.btn-delete-subtask').forEach(btn => {
         btn.addEventListener('click', (e) => {
-          const parentId = btn.dataset.parentId;
-          const subtaskId = btn.dataset.subtaskId;
-
+          e.stopPropagation();
+          const taskId = btn.dataset.taskId;
           if (confirm('Delete this subtask?')) {
-            deleteSubtask(parentId, subtaskId);
+            app.tasks = app.tasks.filter(t => t.id !== taskId);
+            saveToStorage();
             renderTasks();
             renderSummary();
           }
         });
       });
 
-      // Add subtask
-      document.querySelectorAll('.btn-add-subtask').forEach(btn => {
+      // Add subtask inline (from text input)
+      document.querySelectorAll('.btn-add-subtask-inline').forEach(btn => {
         btn.addEventListener('click', (e) => {
+          e.stopPropagation();
           const parentId = btn.dataset.parentId;
           const input = btn.closest('.add-subtask-row').querySelector('.add-subtask-input');
           const title = input.value.trim();
 
           if (title) {
-            addSubtask(parentId, title);
-            input.value = '';
-            input.focus();
-            renderTasks();
-            renderSummary();
+            const parent = app.tasks.find(t => t.id === parentId);
+            if (parent) {
+              const newSubtask = {
+                id: generateUUID(),
+                title: title,
+                project: parent.project,
+                stage: parent.stage || '',
+                status: 'TO DO',
+                dueDate: null,
+                notes: '',
+                priority: false,
+                focusTagged: false,
+                recurrence: { type: 'never' },
+                recurrenceParentId: null,
+                parentTaskId: parentId,
+                createdAt: new Date().toISOString(),
+                startedAt: null,
+                completedAt: null,
+                statusHistory: [{ status: 'TO DO', changedAt: new Date().toISOString() }],
+                order: app.tasks.length
+              };
+              app.tasks.push(newSubtask);
+              saveToStorage();
+              input.value = '';
+              input.focus();
+              renderTasks();
+              renderSummary();
+            }
           }
         });
       });
@@ -4442,7 +4469,7 @@
         input.addEventListener('keypress', (e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
-            const btn = input.closest('.add-subtask-row').querySelector('.btn-add-subtask');
+            const btn = input.closest('.add-subtask-row').querySelector('.btn-add-subtask-inline');
             btn.click();
           }
         });
