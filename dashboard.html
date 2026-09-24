@@ -2818,7 +2818,8 @@
         pomodoroTimeRemaining: 1500, // 25 minutes in seconds
         pomodoroInterval: null,
         pomodoroStartTime: null
-      }
+      },
+      openTaskModalId: null  // Track which task's modal is open
     };
 
     // ===== STORAGE =====
@@ -3157,7 +3158,7 @@
       if (subtasks.length === 0) return '';
 
       let html = `<div class="subtasks-container" data-parent-id="${parentId}" style="display: none;">
-        <div style="font-size: 9px; font-weight: bold; color: var(--text-primary); padding: 8px 12px 4px 12px; background: var(--bg-input);">Subtasks:</div>`;
+        <div style="font-size: 9px; font-weight: bold; color: var(--text-primary); padding: 8px 12px 2px 12px; background: var(--bg-input);">Subtasks:</div>`;
 
       subtasks.forEach(subtask => {
         html += `
@@ -3735,6 +3736,8 @@
       const task = app.tasks.find(t => t.id === taskId);
       if (!task) return;
 
+      app.openTaskModalId = taskId;  // Track which task's modal is open
+
       document.getElementById('modalTaskTitle').value = task.title;
       document.getElementById('modalTaskProject').value = task.project;
       document.getElementById('modalTaskStatus').value = task.status;
@@ -3867,6 +3870,7 @@
 
     function closeTaskModal() {
       document.getElementById('taskModal').classList.remove('active');
+      app.openTaskModalId = null;  // Clear tracking
     }
 
     function saveTaskFromModal(taskId) {
@@ -4388,15 +4392,11 @@
             renderSummary();
 
             // Refresh modal if it's open and showing this parent task
-            const modal = document.getElementById('taskModal');
-            if (modal.classList.contains('active')) {
-              const titleInput = document.getElementById('modalTaskTitle');
-              if (titleInput) {
-                const currentTaskTitle = titleInput.value;
-                if (currentTaskTitle === parent.title) {
-                  openTaskModal(parentId);
-                }
-              }
+            if (app.openTaskModalId === parentId) {
+              // Use setTimeout to ensure renderTasks completes before refreshing modal
+              setTimeout(() => {
+                openTaskModal(parentId);
+              }, 50);
             }
 
             // Auto-expand subtasks container and focus new subtask
