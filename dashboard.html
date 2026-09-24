@@ -4435,11 +4435,11 @@
         return 'evening';
       }
 
-      // Organize by time sections
+      // Organize meetings by time sections
       const sections = {
-        morning: { label: '🌅 MORNING', meetings: [], tasks: [] },
-        afternoon: { label: '☀️ AFTERNOON', meetings: [], tasks: [] },
-        evening: { label: '🌙 EVENING', meetings: [], tasks: [] }
+        morning: { label: '🌅 MORNING', meetings: [] },
+        afternoon: { label: '☀️ AFTERNOON', meetings: [] },
+        evening: { label: '🌙 EVENING', meetings: [] }
       };
 
       // Add meetings to sections
@@ -4448,27 +4448,21 @@
         sections[section].meetings.push(meeting);
       });
 
-      // Add focused tasks to sections (unsorted, no time constraint)
+      // Sort focused tasks: IN PROG first, then TO DO/PENDING, then DONE
       const sorted = focusedTasks.sort((a, b) => {
         const priority = { 'IN PROG': 0, 'TO DO': 1, 'PENDING': 2, 'DONE': 3 };
         return (priority[a.status] || 99) - (priority[b.status] || 99);
       });
-      sorted.forEach(task => {
-        sections.morning.tasks.push(task);
-      });
 
       let html = '';
 
-      // Render each section
+      // Render time-based meeting sections
       ['morning', 'afternoon', 'evening'].forEach(sectionKey => {
         const section = sections[sectionKey];
-        const hasContent = section.meetings.length > 0 || section.tasks.length > 0;
-
-        if (hasContent) {
+        if (section.meetings.length > 0) {
           html += `<div class="time-section">
             <div class="time-section-header">${section.label}</div>`;
 
-          // Render meetings
           section.meetings.forEach(meeting => {
             const priorityIcon = meeting.priority ? '★' : '';
             html += `
@@ -4483,48 +4477,55 @@
             `;
           });
 
-          // Render tasks
-          section.tasks.forEach(task => {
-            const isDone = task.status === 'DONE';
-            const isInProgress = task.status === 'IN PROG';
-            const priority = task.priority ? '🚩' : '';
-
-            html += `
-              <div class="focus-task-item" data-task-id="${task.id}" style="${isDone ? 'opacity: 0.6;' : ''}">
-                <div class="focus-task-header">
-                  <span class="focus-task-title" style="${isDone ? 'text-decoration: line-through;' : ''}">${task.title}</span>
-                  ${priority ? `<span style="font-size: 12px;">${priority}</span>` : ''}
-                  ${isInProgress ? '<span class="focus-task-status">⏱ IN PROGRESS</span>' : ''}
-                </div>
-                <div style="font-size: 8px; color: var(--text-secondary); margin-bottom: 6px;">
-                  ${task.project}${task.stage ? ' → ' + task.stage : ''}
-                </div>
-            `;
-
-            if (!isDone) {
-              html += `
-                <div class="focus-task-actions">
-                  <button class="btn-focus-action" data-task-id="${task.id}" data-action="start">
-                    ${isInProgress ? 'In Progress' : 'Start'}
-                  </button>
-                  <button class="btn-focus-action" data-task-id="${task.id}" data-action="done">Mark Done</button>
-                  <button class="btn-focus-remove" data-task-id="${task.id}">×</button>
-                </div>
-              `;
-            } else {
-              html += `
-                <div style="font-size: 8px; color: var(--text-muted); font-style: italic;">
-                  Completed ${task.completedAt ? formatDate(new Date(task.completedAt)) : 'today'}
-                </div>
-              `;
-            }
-
-            html += '</div>';
-          });
-
           html += '</div>';
         }
       });
+
+      // Render focused tasks in a separate section
+      if (sorted.length > 0) {
+        html += `<div class="time-section">
+          <div class="time-section-header">💚 FOCUS TASKS</div>`;
+
+        sorted.forEach(task => {
+          const isDone = task.status === 'DONE';
+          const isInProgress = task.status === 'IN PROG';
+          const priority = task.priority ? '🚩' : '';
+
+          html += `
+            <div class="focus-task-item" data-task-id="${task.id}" style="${isDone ? 'opacity: 0.6;' : ''}">
+              <div class="focus-task-header">
+                <span class="focus-task-title" style="${isDone ? 'text-decoration: line-through;' : ''}">${task.title}</span>
+                ${priority ? `<span style="font-size: 12px;">${priority}</span>` : ''}
+                ${isInProgress ? '<span class="focus-task-status">⏱ IN PROGRESS</span>' : ''}
+              </div>
+              <div style="font-size: 8px; color: var(--text-secondary); margin-bottom: 6px;">
+                ${task.project}${task.stage ? ' → ' + task.stage : ''}
+              </div>
+          `;
+
+          if (!isDone) {
+            html += `
+              <div class="focus-task-actions">
+                <button class="btn-focus-action" data-task-id="${task.id}" data-action="start">
+                  ${isInProgress ? 'In Progress' : 'Start'}
+                </button>
+                <button class="btn-focus-action" data-task-id="${task.id}" data-action="done">Mark Done</button>
+                <button class="btn-focus-remove" data-task-id="${task.id}">×</button>
+              </div>
+            `;
+          } else {
+            html += `
+              <div style="font-size: 8px; color: var(--text-muted); font-style: italic;">
+                Completed ${task.completedAt ? formatDate(new Date(task.completedAt)) : 'today'}
+              </div>
+            `;
+          }
+
+          html += '</div>';
+        });
+
+        html += '</div>';
+      }
 
       container.innerHTML = html;
 
