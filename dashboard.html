@@ -1988,6 +1988,204 @@
       border-color: var(--text-primary);
       background: var(--bg-input);
     }
+
+    /* TODAY View (Focus + Pomodoro) */
+    .today-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: var(--bg-dark);
+      border-bottom: 1px solid var(--border-default);
+    }
+
+    .today-title {
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    .today-date {
+      font-size: 9px;
+      color: var(--text-secondary);
+    }
+
+    .today-stats {
+      display: flex;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-input);
+      border-bottom: 1px solid var(--border-secondary);
+      font-size: 8px;
+      color: var(--text-secondary);
+    }
+
+    .pomodoro-widget {
+      padding: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-default);
+      border-radius: 2px;
+      margin: 12px;
+      text-align: center;
+    }
+
+    .pomodoro-display {
+      display: flex;
+      justify-content: center;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .pomodoro-time {
+      font-size: 32px;
+      font-weight: bold;
+      color: var(--color-todo);
+      font-family: 'Courier New', monospace;
+      letter-spacing: 2px;
+    }
+
+    .pomodoro-label {
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+
+    .pomodoro-controls {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-pomodoro {
+      background: var(--color-todo);
+      border: 1px solid var(--color-todo);
+      color: white;
+      cursor: pointer;
+      padding: 6px 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+      font-weight: bold;
+      border-radius: 2px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-pomodoro:hover {
+      opacity: 0.9;
+    }
+
+    .btn-pomodoro-secondary {
+      background: none;
+      border: 1px solid var(--border-default);
+      color: var(--text-primary);
+      cursor: pointer;
+      padding: 6px 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 8px;
+      font-weight: bold;
+      transition: all 0.2s ease;
+    }
+
+    .btn-pomodoro-secondary:hover {
+      border-color: var(--text-primary);
+      background: var(--bg-input);
+    }
+
+    .focus-task-item {
+      padding: 12px;
+      margin-bottom: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-default);
+      border-radius: 2px;
+    }
+
+    .focus-task-header {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .focus-task-title {
+      flex: 1;
+      font-size: 9px;
+      color: var(--text-primary);
+      font-weight: bold;
+    }
+
+    .focus-task-project {
+      font-size: 8px;
+      color: var(--text-secondary);
+    }
+
+    .focus-task-status {
+      font-size: 8px;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .focus-task-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .btn-focus-action {
+      flex: 1;
+      background: none;
+      border: 1px solid var(--border-secondary);
+      color: var(--text-primary);
+      cursor: pointer;
+      padding: 4px 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 8px;
+      font-weight: bold;
+      transition: all 0.2s ease;
+    }
+
+    .btn-focus-action:hover {
+      border-color: var(--text-primary);
+      background: var(--bg-input);
+    }
+
+    .btn-focus-remove {
+      background: none;
+      border: 1px solid var(--border-secondary);
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 6px;
+      font-size: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-focus-remove:hover {
+      color: #d4756a;
+      border-color: #d4756a;
+    }
+
+    .focus-empty {
+      text-align: center;
+      padding: 40px 12px;
+      color: var(--text-muted);
+      font-size: 10px;
+    }
+
+    .btn-toggle-focus {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0;
+      margin-left: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-toggle-focus:hover {
+      opacity: 0.7;
+    }
   </style>
 </head>
 <body>
@@ -1996,6 +2194,7 @@
       <div class="sidebar-title">📋 VIEWS</div>
       <div class="nav-tabs">
         <button class="nav-tab active" data-tab="tasks">TASKS</button>
+        <button class="nav-tab" data-tab="today">TODAY</button>
         <button class="nav-tab" data-tab="timeline">PROJECTS</button>
         <button class="nav-tab" data-tab="calendar">CALENDAR</button>
         <button class="nav-tab" data-tab="summary">SUMMARY</button>
@@ -2191,6 +2390,46 @@
           </div>
         </div>
 
+        <!-- TODAY TAB (Focus + Pomodoro) -->
+        <div id="today-view" class="tab-content" style="display: none;">
+          <div class="today-header">
+            <h2 class="today-title">TODAY'S FOCUS</h2>
+            <span class="today-date" id="todayDate">Today</span>
+          </div>
+
+          <div class="today-stats">
+            <span>Focused: <span id="focusedCount">0</span></span>
+            <span style="margin-left: 16px;">In Progress: <span id="focusInProgressCount">0</span></span>
+            <span style="margin-left: 16px;">Done: <span id="focusDoneCount">0</span></span>
+          </div>
+
+          <!-- Pomodoro Widget -->
+          <div class="pomodoro-widget">
+            <div class="pomodoro-display">
+              <span class="pomodoro-time" id="pomodoroTime">25:00</span>
+              <span class="pomodoro-label">min</span>
+            </div>
+
+            <div class="pomodoro-controls">
+              <button id="pomodoroStart" class="btn-pomodoro">Start</button>
+              <button id="pomodoroPause" class="btn-pomodoro" style="display: none;">Pause</button>
+              <button id="pomodoroReset" class="btn-pomodoro-secondary">Reset</button>
+              <button id="pomodoroAdd5" class="btn-pomodoro-secondary">+5 min</button>
+            </div>
+          </div>
+
+          <!-- Focus Tasks Container -->
+          <div id="focusTasksContainer" style="padding: 12px;">
+            <!-- Focused tasks rendered here -->
+          </div>
+
+          <!-- Empty State -->
+          <div id="focusEmptyState" class="focus-empty" style="display: none;">
+            <p>No focused tasks for today.</p>
+            <p style="font-size: 8px; color: var(--text-muted);">Tag tasks to add them to your focus list.</p>
+          </div>
+        </div>
+
         <!-- CALENDAR TAB -->
         <div id="calendar-view" class="tab-content" style="display: none;">
           <div class="calendar-grid" id="calendar-grid">
@@ -2245,6 +2484,7 @@
             </div>
 
             <div class="modal-actions">
+              <button id="modalFocusBtn">💚 FOCUS</button>
               <button id="modalFlagBtn">🚩 FLAG</button>
               <button id="modalDeleteBtn">DELETE</button>
               <button id="modalSaveBtn" class="primary">SAVE</button>
@@ -2502,6 +2742,12 @@
       },
       dataBackups: [], // Array of versioned backups
       expandedStreamId: null, // Track which stream is expanded in PROJECTS view
+      focusState: {
+        pomodoroRunning: false,
+        pomodoroTimeRemaining: 1500, // 25 minutes in seconds
+        pomodoroInterval: null,
+        pomodoroStartTime: null
+      }
     };
 
     // ===== STORAGE =====
@@ -2663,6 +2909,7 @@
         dueDate,
         notes: '',
         priority: false,
+        focusTagged: false,
         recurrence: recurrence || { type: 'never' },
         recurrenceParentId: null,
         parentTaskId: null,
@@ -3477,9 +3724,15 @@
       }
       stageSelect.value = task.stage || '';
 
+      // Update modal button styles based on task state
+      const focusBtn = document.getElementById('modalFocusBtn');
+      focusBtn.style.background = task.focusTagged ? 'rgba(76, 175, 80, 0.2)' : 'none';
+      focusBtn.style.borderColor = task.focusTagged ? '#7aaa6a' : 'var(--border-secondary)';
+
       // Modal buttons
       document.getElementById('modalSaveBtn').onclick = () => saveTaskFromModal(taskId);
       document.getElementById('modalFlagBtn').onclick = () => toggleTaskFlag(taskId);
+      document.getElementById('modalFocusBtn').onclick = () => toggleFocusTag(taskId, true);
       document.getElementById('modalDeleteBtn').onclick = () => deleteTaskFromModal(taskId);
       document.getElementById('modalClose').onclick = () => closeTaskModal();
 
@@ -3511,6 +3764,33 @@
         task.priority = !task.priority;
         saveToStorage();
         renderKanbanView();
+      }
+    }
+
+    function toggleFocusTag(taskId, fromModal = false) {
+      const task = app.tasks.find(t => t.id === taskId);
+      if (task && !task.parentTaskId) { // Parent tasks only
+        task.focusTagged = !task.focusTagged;
+        saveToStorage();
+
+        if (fromModal) {
+          // Update modal button appearance
+          const focusBtn = document.getElementById('modalFocusBtn');
+          focusBtn.style.background = task.focusTagged ? 'rgba(76, 175, 80, 0.2)' : 'none';
+          focusBtn.style.borderColor = task.focusTagged ? '#7aaa6a' : 'var(--border-secondary)';
+        } else {
+          // Re-render current view
+          if (app.currentTasksView === 'list') {
+            renderTasks();
+          } else if (app.currentTasksView === 'kanban') {
+            renderKanbanView();
+          }
+        }
+
+        // If we're in TODAY view, re-render it
+        if (app.currentTab === 'today') {
+          renderTodayView();
+        }
       }
     }
 
@@ -4079,6 +4359,135 @@
           }
         });
       });
+    }
+
+    // ===== FOCUS & POMODORO =====
+    function renderTodayView() {
+      const today = new Date();
+      document.getElementById('todayDate').textContent = today.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+
+      // Get focused tasks (parent tasks only)
+      const focusedTasks = app.tasks.filter(t => t.focusTagged && !t.parentTaskId);
+
+      // Update stats
+      const inProgress = focusedTasks.filter(t => t.status === 'IN PROG').length;
+      const done = focusedTasks.filter(t => t.status === 'DONE').length;
+
+      document.getElementById('focusedCount').textContent = focusedTasks.length;
+      document.getElementById('focusInProgressCount').textContent = inProgress;
+      document.getElementById('focusDoneCount').textContent = done;
+
+      const container = document.getElementById('focusTasksContainer');
+
+      if (focusedTasks.length === 0) {
+        container.innerHTML = '';
+        document.getElementById('focusEmptyState').style.display = 'block';
+        return;
+      }
+
+      document.getElementById('focusEmptyState').style.display = 'none';
+
+      // Sort: IN PROG first, then TO DO/PENDING, then DONE
+      const sorted = focusedTasks.sort((a, b) => {
+        const priority = { 'IN PROG': 0, 'TO DO': 1, 'PENDING': 2, 'DONE': 3 };
+        return (priority[a.status] || 99) - (priority[b.status] || 99);
+      });
+
+      let html = '';
+
+      sorted.forEach(task => {
+        const isDone = task.status === 'DONE';
+        const isInProgress = task.status === 'IN PROG';
+        const priority = task.priority ? '🚩' : '';
+
+        html += `
+          <div class="focus-task-item" data-task-id="${task.id}" style="${isDone ? 'opacity: 0.6;' : ''}">
+            <div class="focus-task-header">
+              <span class="focus-task-title" style="${isDone ? 'text-decoration: line-through;' : ''}">${task.title}</span>
+              ${priority ? `<span style="font-size: 12px;">${priority}</span>` : ''}
+              ${isInProgress ? '<span class="focus-task-status">⏱ IN PROGRESS</span>' : ''}
+            </div>
+            <div style="font-size: 8px; color: var(--text-secondary); margin-bottom: 6px;">
+              ${task.project}${task.stage ? ' → ' + task.stage : ''}
+            </div>
+        `;
+
+        if (!isDone) {
+          html += `
+            <div class="focus-task-actions">
+              <button class="btn-focus-action" data-task-id="${task.id}" data-action="start">
+                ${isInProgress ? 'In Progress' : 'Start'}
+              </button>
+              <button class="btn-focus-action" data-task-id="${task.id}" data-action="done">Mark Done</button>
+              <button class="btn-focus-remove" data-task-id="${task.id}">×</button>
+            </div>
+          `;
+        } else {
+          html += `
+            <div style="font-size: 8px; color: var(--text-muted); font-style: italic;">
+              Completed ${task.completedAt ? formatDate(new Date(task.completedAt)) : 'today'}
+            </div>
+          `;
+        }
+
+        html += '</div>';
+      });
+
+      container.innerHTML = html;
+    }
+
+    function updatePomodoroDisplay() {
+      const minutes = Math.floor(app.focusState.pomodoroTimeRemaining / 60);
+      const seconds = app.focusState.pomodoroTimeRemaining % 60;
+
+      const display = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      document.getElementById('pomodoroTime').textContent = display;
+    }
+
+    function startPomodoro() {
+      if (app.focusState.pomodoroRunning) return;
+
+      app.focusState.pomodoroRunning = true;
+      document.getElementById('pomodoroStart').style.display = 'none';
+      document.getElementById('pomodoroPause').style.display = 'inline-block';
+
+      app.focusState.pomodoroInterval = setInterval(() => {
+        app.focusState.pomodoroTimeRemaining--;
+        updatePomodoroDisplay();
+
+        if (app.focusState.pomodoroTimeRemaining <= 0) {
+          completePomodoro();
+        }
+      }, 1000);
+    }
+
+    function pausePomodoro() {
+      app.focusState.pomodoroRunning = false;
+      clearInterval(app.focusState.pomodoroInterval);
+      document.getElementById('pomodoroStart').style.display = 'inline-block';
+      document.getElementById('pomodoroPause').style.display = 'none';
+    }
+
+    function resetPomodoro() {
+      pausePomodoro();
+      app.focusState.pomodoroTimeRemaining = 1500; // 25 min
+      updatePomodoroDisplay();
+    }
+
+    function addPomodoroTime() {
+      app.focusState.pomodoroTimeRemaining += 300; // +5 min
+      updatePomodoroDisplay();
+    }
+
+    function completePomodoro() {
+      pausePomodoro();
+      alert('✓ Pomodoro complete! Take a 5-minute break.');
+      resetPomodoro();
     }
 
     function attachSubtaskEventListeners() {
@@ -4732,6 +5141,7 @@
 
       const titles = {
         'tasks': '🕐 TASKS',
+        'today': '💚 TODAY',
         'timeline': '📋 PROJECTS',
         'calendar': '📅 CALENDAR',
         'summary': '📊 SUMMARY',
@@ -4746,6 +5156,7 @@
         restoreFormState();
         switchTasksView(app.currentTasksView);
       }
+      if (tabName === 'today') renderTodayView();
       if (tabName === 'timeline') renderTimeline();
       if (tabName === 'calendar') renderWeeklyMeetingView();
       if (tabName === 'summary') renderSummary();
@@ -4958,6 +5369,52 @@
     // Theme toggle
     document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
 
+    // Pomodoro button listeners
+    document.getElementById('pomodoroStart').addEventListener('click', startPomodoro);
+    document.getElementById('pomodoroPause').addEventListener('click', pausePomodoro);
+    document.getElementById('pomodoroReset').addEventListener('click', resetPomodoro);
+    document.getElementById('pomodoroAdd5').addEventListener('click', addPomodoroTime);
+
+    // Focus task actions
+    document.addEventListener('click', (e) => {
+      // Start/toggle task
+      if (e.target.dataset.action === 'start') {
+        const taskId = e.target.dataset.taskId;
+        const task = app.tasks.find(t => t.id === taskId);
+        if (task) {
+          if (task.status === 'IN PROG') {
+            // Already in progress, do nothing (could add toggle to PENDING)
+          } else {
+            setTaskStatus(taskId, 'IN PROG');
+            renderTodayView();
+          }
+        }
+      }
+
+      // Mark done
+      if (e.target.dataset.action === 'done') {
+        const taskId = e.target.dataset.taskId;
+        const task = app.tasks.find(t => t.id === taskId);
+        if (task) {
+          setTaskStatus(taskId, 'DONE');
+          task.focusTagged = false; // Auto-remove from focus
+          saveToStorage();
+          renderTodayView();
+        }
+      }
+
+      // Remove from focus
+      if (e.target.classList.contains('btn-focus-remove')) {
+        const taskId = e.target.dataset.taskId;
+        const task = app.tasks.find(t => t.id === taskId);
+        if (task) {
+          task.focusTagged = false;
+          saveToStorage();
+          renderTodayView();
+        }
+      }
+    });
+
     // Project dropdown change - update stream options
     document.getElementById('task-project').addEventListener('change', (e) => {
       const projectName = e.target.value;
@@ -5045,6 +5502,10 @@
     // Initialize autosave interval
     const autoSaveFrequency = app.settings.autoSaveFrequency || 10;
     setInterval(autoSave, autoSaveFrequency * 60000);
+
+    // Initialize Pomodoro display and updates
+    updatePomodoroDisplay();
+    setInterval(updatePomodoroDisplay, 1000);
 
     // Load saved tasks view preference
     app.currentTasksView = localStorage.getItem('currentTasksView') || 'list';
