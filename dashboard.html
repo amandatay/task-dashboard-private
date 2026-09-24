@@ -1916,7 +1916,7 @@
 
     .subtasks-container {
       grid-column: 1 / -1;
-      margin: 8px 0 0 24px;
+      margin: 0 0 0 24px;
       padding: 8px;
       background: var(--bg-input);
       border-left: 2px solid var(--border-secondary);
@@ -4386,6 +4386,18 @@
             saveToStorage();
             renderTasks();
             renderSummary();
+
+            // Refresh modal if it's open and showing this parent task
+            const modal = document.getElementById('taskModal');
+            if (modal.classList.contains('active')) {
+              const titleInput = document.getElementById('modalTaskTitle');
+              if (titleInput) {
+                const currentTaskTitle = titleInput.value;
+                if (currentTaskTitle === parent.title) {
+                  openTaskModal(parentId);
+                }
+              }
+            }
 
             // Auto-expand subtasks container and focus new subtask
             const container = document.querySelector(`.subtasks-container[data-parent-id="${parentId}"]`);
