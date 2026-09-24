@@ -3680,11 +3680,17 @@
       const statuses = app.settings.statuses.map(s => s.name);
       const tasksByStatus = {};
 
-      // Filter tasks by selected project
+      // Filter parent tasks by selected project (exclude subtasks from top level)
       statuses.forEach(status => {
-        tasksByStatus[status] = app.tasks
+        const allTasks = app.tasks
           .filter(t => t.status === status && t.project === app.selectedKanbanProject)
           .sort((a, b) => a.order - b.order);
+
+        // Separate parent tasks and subtasks
+        const parentTasks = allTasks.filter(t => !t.parentTaskId);
+        const subtasks = allTasks.filter(t => t.parentTaskId);
+
+        tasksByStatus[status] = { parentTasks, subtasks, allTasks };
       });
 
       statuses.forEach(status => {
@@ -3697,7 +3703,7 @@
         header.innerHTML = `
           <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
             <span>${status}</span>
-            <span class="kanban-column-count">${tasksByStatus[status].length}</span>
+            <span class="kanban-column-count">${tasksByStatus[status].allTasks.length}</span>
           </div>
         `;
 
@@ -3705,22 +3711,70 @@
         tasksContainer.className = 'kanban-tasks';
         tasksContainer.setAttribute('data-status', status);
 
-        tasksByStatus[status].forEach(task => {
-          const card = document.createElement('div');
+        // Render parent tasks with their subtasks
+        tasksByStatus[status].parentTasks.forEach(parentTask => {
+          const parentCard = document.createElement('div');
           const statusLower = status.toLowerCase().replace(' ', '');
-          card.className = `kanban-task-card ${statusLower}${task.priority ? ' flagged' : ''}`;
-          card.setAttribute('data-task-id', task.id);
-          card.draggable = true;
+          parentCard.className = `kanban-task-card ${statusLower}${parentTask.priority ? ' flagged' : ''}`;
+          parentCard.setAttribute('data-task-id', parentTask.id);
+          parentCard.draggable = true;
 
-          const recurrenceBadge = getRecurrenceDisplay(task);
-          card.innerHTML = `
-            <div class="kanban-task-title">${recurrenceBadge} ${task.title}</div>
-            <div class="kanban-task-meta">${task.stage ? task.stage : 'no stage'}</div>
-            <div class="kanban-task-date">${formatDate(task.dueDate)}</div>
+          const recurrenceBadge = getRecurrenceDisplay(parentTask);
+          const subtaskCount = getSubtasks(parentTask.id).length;
+
+          parentCard.innerHTML = `
+            <div class="kanban-task-title">${recurrenceBadge} ${parentTask.title}</div>
+            <div class="kanban-task-meta">${parentTask.stage ? parentTask.stage : 'no stage'}${subtaskCount > 0 ? ` • ${subtaskCount} subtask${subtaskCount !== 1 ? 's' : ''}` : ''}</div>
+            <div class="kanban-task-date">${formatDate(parentTask.dueDate)}</div>
           `;
 
-          card.addEventListener('click', () => openTaskModal(task.id));
+          parentCard.addEventListener('click', () => openTaskModal(parentTask.id));
+          tasksContainer.appendChild(parentCard);
 
+          // Render subtasks for this parent
+          getSubtasks(parentTask.id).forEach(subtask => {
+            const subtaskCard = document.createElement('div');
+            const subtaskStatusLower = subtask.status.toLowerCase().replace(' ', '');
+            subtaskCard.className = `kanban-task-card kanban-subtask ${subtaskStatusLower}${subtask.priority ? ' flagged' : ''}`;
+            subtaskCard.setAttribute('data-task-id', subtask.id);
+            subtaskCard.style.marginLeft = '24px';
+            subtaskCard.style.marginTop = '4px';
+            subtaskCard.style.opacity = '0.9';
+            // Don't make subtasks draggable between columns
+            subtaskCard.draggable = false;
+
+            const recurrenceBadge = getRecurrenceDisplay(subtask);
+            subtaskCard.innerHTML = `
+              <div class="kanban-task-title">├─ ${recurrenceBadge} ${subtask.title}</div>
+              <div class="kanban-task-meta">${subtask.stage ? subtask.stage : 'no stage'}</div>
+              <div class="kanban-task-date">${formatDate(subtask.dueDate)}</div>
+            `;
+
+            subtaskCard.addEventListener('click', (e) => {
+              e.stopPropagation();  // Don't trigger parent card click
+              openTaskModal(subtask.id);
+            });
+
+            tasksContainer.appendChild(subtaskCard);
+          });
+        });
+
+        // Also render orphan subtasks (subtasks with no parent in this status)
+        tasksByStatus[status].subtasks.forEach(orphanSubtask => {
+          const card = document.createElement('div');
+          const statusLower = status.toLowerCase().replace(' ', '');
+          card.className = `kanban-task-card ${statusLower}${orphanSubtask.priority ? ' flagged' : ''}`;
+          card.setAttribute('data-task-id', orphanSubtask.id);
+          card.draggable = true;
+
+          const recurrenceBadge = getRecurrenceDisplay(orphanSubtask);
+          card.innerHTML = `
+            <div class="kanban-task-title">${recurrenceBadge} ${orphanSubtask.title}</div>
+            <div class="kanban-task-meta">${orphanSubtask.stage ? orphanSubtask.stage : 'no stage'}</div>
+            <div class="kanban-task-date">${formatDate(orphanSubtask.dueDate)}</div>
+          `;
+
+          card.addEventListener('click', () => openTaskModal(orphanSubtask.id));
           tasksContainer.appendChild(card);
         });
 
