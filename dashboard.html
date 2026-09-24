@@ -3141,11 +3141,12 @@
       const subtasks = getSubtasks(parentId);
       if (subtasks.length === 0) return '';
 
-      let html = `<div class="subtasks-container" data-parent-id="${parentId}" style="display: none;">`;
+      let html = `<div class="subtasks-container" data-parent-id="${parentId}" style="display: none;">
+        <div style="font-size: 9px; font-weight: bold; color: var(--text-primary); padding: 8px 12px 4px 12px; background: var(--bg-input);">Subtasks:</div>`;
 
       subtasks.forEach(subtask => {
         html += `
-          <div class="subtask-row" data-task-id="${subtask.id}">
+          <div class="subtask-row" data-task-id="${subtask.id}" style="cursor: pointer;">
             <span class="subtask-indent">├─</span>
             <span class="subtask-title">${subtask.title}</span>
             <select class="subtask-status-select" data-task-id="${subtask.id}">
@@ -3406,21 +3407,15 @@
               <select class="task-status" data-task-id="${task.id}">
                 ${app.settings.statuses.map(s => `<option value="${s.name}" ${task.status === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
               </select>
-              <select class="task-stream" data-task-id="${task.id}" style="padding: 4px; background-color: var(--bg-input); border: 1px solid; border-color: inherit; color: inherit; font-family: 'Courier New', monospace; font-size: 9px; cursor: pointer;">
-                <option value="">--</option>
-                ${stageOptions}
-              </select>
               <div class="task-date">${formatDate(task.dueDate)}</div>
               ${renderNotesControl(task)}
-              <button class="task-button" data-task-id="${task.id}" data-action="toggle">${buttonText}</button>
-              <button class="task-button" data-task-id="${task.id}" data-action="flag">🚩</button>
+              <button class="btn-add-subtask" data-parent-id="${task.id}" title="Add subtask">+subtask</button>
               <button class="task-delete" data-task-id="${task.id}" data-action="delete">×</button>
             `;
 
             tasksContainer.appendChild(card);
 
-            // Handle subtasks display
-            // Handle subtasks
+            // Handle subtasks display (only show if they exist)
             const subtasks = getSubtasks(task.id);
             if (subtasks.length > 0) {
               // Show progress indicator for existing subtasks
@@ -3432,17 +3427,6 @@
               const subtasksDiv = document.createElement('div');
               subtasksDiv.innerHTML = renderSubtaskContainer(task.id);
               tasksContainer.appendChild(subtasksDiv);
-            } else {
-              // Show "Add Subtask" button for tasks without subtasks
-              const addSubtaskDiv = document.createElement('div');
-              addSubtaskDiv.className = 'subtask-add-button-row';
-              addSubtaskDiv.setAttribute('data-parent-id', task.id);
-              addSubtaskDiv.innerHTML = `
-                <button class="btn-add-first-subtask" data-parent-id="${task.id}">
-                  +subtask
-                </button>
-              `;
-              tasksContainer.appendChild(addSubtaskDiv);
             }
 
             if (app.noteExpandedState[task.id]) {
@@ -4171,15 +4155,31 @@
       document.querySelectorAll('.task-card').forEach(card => {
         card.addEventListener('click', (e) => {
           // Don't open modal if clicking on buttons, selects, or drag handle
-          if (e.target.closest('.task-button') ||
-              e.target.closest('.task-delete') ||
+          if (e.target.closest('.task-delete') ||
               e.target.closest('.drag-handle') ||
               e.target.closest('.task-status') ||
-              e.target.closest('.task-stream') ||
-              e.target.closest('.task-notes-control')) {
+              e.target.closest('.task-notes-control') ||
+              e.target.closest('.btn-add-subtask')) {
             return;
           }
           const taskId = card.getAttribute('data-task-id');
+          if (taskId) {
+            openTaskModal(taskId);
+          }
+        });
+      });
+
+      // Click to open subtask modal
+      document.querySelectorAll('.subtask-row').forEach(row => {
+        row.addEventListener('click', (e) => {
+          // Don't open modal if clicking on status select, flag button, or delete button
+          if (e.target.closest('.subtask-status-select') ||
+              e.target.closest('.btn-flag-subtask') ||
+              e.target.closest('.btn-delete-subtask') ||
+              e.target.closest('.add-subtask-row')) {
+            return;
+          }
+          const taskId = row.getAttribute('data-task-id');
           if (taskId) {
             openTaskModal(taskId);
           }
@@ -4250,15 +4250,36 @@
         });
       });
 
-      // Stream dropdown
-      document.querySelectorAll('.task-stream').forEach(select => {
-        select.addEventListener('change', (e) => {
-          const taskId = e.target.getAttribute('data-task-id');
-          const task = app.tasks.find(t => t.id === taskId);
-          if (task) {
-            task.stage = e.target.value || '';
+      // Add subtask button on parent task card
+      document.querySelectorAll('.btn-add-subtask').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const parentId = btn.dataset.parentId;
+          const parent = app.tasks.find(t => t.id === parentId);
+          if (parent) {
+            const newSubtask = {
+              id: generateUUID(),
+              title: '',
+              project: parent.project,
+              stage: parent.stage || '',
+              status: 'TO DO',
+              dueDate: null,
+              notes: '',
+              priority: false,
+              focusTagged: false,
+              recurrence: { type: 'never' },
+              recurrenceParentId: null,
+              parentTaskId: parentId,
+              createdAt: new Date().toISOString(),
+              startedAt: null,
+              completedAt: null,
+              statusHistory: [{ status: 'TO DO', changedAt: new Date().toISOString() }],
+              order: app.tasks.length
+            };
+            app.tasks.push(newSubtask);
             saveToStorage();
             renderTasks();
+            renderSummary();
           }
         });
       });
