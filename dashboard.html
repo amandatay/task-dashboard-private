@@ -2539,6 +2539,21 @@
               <div class="modal-field-value" id="modalTaskRecurrence" style="padding: 6px 8px;">Never</div>
             </div>
 
+            <!-- Parent Task (shown only for subtasks) -->
+            <div class="modal-field" id="modalParentTaskField" style="display: none;">
+              <label class="modal-field-label">Parent Task</label>
+              <select id="modalParentTaskSelect" class="modal-field-value" style="width: 100%; padding: 6px 8px; font-family: 'Courier New', monospace; font-size: 9px; background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-secondary); border-radius: 2px;">
+                <option value="">-- No Parent --</option>
+              </select>
+            </div>
+
+            <!-- Subtasks (shown only for parent tasks with subtasks) -->
+            <div class="modal-field" id="modalSubtasksField" style="display: none;">
+              <label class="modal-field-label">Subtasks</label>
+              <div id="modalSubtasksCheckboxes" style="max-height: 200px; overflow-y: auto;">
+              </div>
+            </div>
+
             <div class="modal-actions">
               <button id="modalFocusBtn">💚 FOCUS</button>
               <button id="modalFlagBtn">🚩 FLAG</button>
@@ -3765,6 +3780,76 @@
       }
       stageSelect.value = task.stage || '';
 
+      // Handle Parent Task field (for subtasks)
+      const parentTaskField = document.getElementById('modalParentTaskField');
+      if (task.parentTaskId) {
+        // This is a subtask - show parent task dropdown
+        parentTaskField.style.display = 'block';
+        const parentSelect = document.getElementById('modalParentTaskSelect');
+        parentSelect.innerHTML = '<option value="">-- No Parent --</option>';
+
+        // Add all parent tasks (tasks without a parent)
+        app.tasks.filter(t => !t.parentTaskId).forEach(parentTask => {
+          const option = document.createElement('option');
+          option.value = parentTask.id;
+          option.textContent = parentTask.title;
+          option.selected = (parentTask.id === task.parentTaskId);
+          parentSelect.appendChild(option);
+        });
+      } else {
+        parentTaskField.style.display = 'none';
+      }
+
+      // Handle Subtasks field (for parent tasks with subtasks)
+      const subtasksField = document.getElementById('modalSubtasksField');
+      const subtasks = getSubtasks(task.id);
+      if (subtasks.length > 0 || !task.parentTaskId) {
+        // Show subtasks field if parent task (has or can have subtasks)
+        if (!task.parentTaskId) {
+          subtasksField.style.display = 'block';
+          const checkboxesContainer = document.getElementById('modalSubtasksCheckboxes');
+          checkboxesContainer.innerHTML = '';
+
+          // Add checkboxes for all subtasks (including unassigned ones)
+          const allPotentialSubtasks = app.tasks.filter(t => t.parentTaskId === null && t.id !== task.id);
+
+          if (allPotentialSubtasks.length === 0) {
+            checkboxesContainer.innerHTML = '<div style="font-size: 9px; color: var(--text-muted); padding: 8px;">No tasks to assign as subtasks</div>';
+          } else {
+            allPotentialSubtasks.forEach(potentialSubtask => {
+              const label = document.createElement('label');
+              label.style.display = 'flex';
+              label.style.alignItems = 'center';
+              label.style.gap = '8px';
+              label.style.padding = '6px';
+              label.style.fontSize = '9px';
+              label.style.cursor = 'pointer';
+              label.style.backgroundColor = 'var(--bg-input)';
+              label.style.margin = '4px 0';
+              label.style.borderRadius = '2px';
+
+              const checkbox = document.createElement('input');
+              checkbox.type = 'checkbox';
+              checkbox.value = potentialSubtask.id;
+              checkbox.checked = potentialSubtask.parentTaskId === task.id;
+              checkbox.dataset.subtaskId = potentialSubtask.id;
+              checkbox.style.cursor = 'pointer';
+
+              const span = document.createElement('span');
+              span.textContent = potentialSubtask.title;
+
+              label.appendChild(checkbox);
+              label.appendChild(span);
+              checkboxesContainer.appendChild(label);
+            });
+          }
+        } else {
+          subtasksField.style.display = 'none';
+        }
+      } else {
+        subtasksField.style.display = 'none';
+      }
+
       // Update modal button styles based on task state
       const focusBtn = document.getElementById('modalFocusBtn');
       focusBtn.style.background = task.focusTagged ? 'rgba(76, 175, 80, 0.2)' : 'none';
@@ -3793,7 +3878,28 @@
         task.dueDate = document.getElementById('modalTaskDate').value;
         task.notes = document.getElementById('modalTaskNotes').value;
         task.stage = document.getElementById('modalTaskStage').value || '';
+
+        // Save parent task change (for subtasks)
+        if (task.parentTaskId) {
+          const newParentId = document.getElementById('modalParentTaskSelect').value;
+          task.parentTaskId = newParentId || null;
+        }
+
+        // Save subtask assignments (for parent tasks)
+        if (!task.parentTaskId) {
+          const checkboxes = document.querySelectorAll('#modalSubtasksCheckboxes input[type="checkbox"]');
+          checkboxes.forEach(checkbox => {
+            const subtaskId = checkbox.dataset.subtaskId;
+            const subtask = app.tasks.find(t => t.id === subtaskId);
+            if (subtask) {
+              // If checked, assign to this parent; if unchecked, make it orphan
+              subtask.parentTaskId = checkbox.checked ? task.id : null;
+            }
+          });
+        }
+
         saveToStorage();
+        renderTasks();
         renderKanbanView();
         closeTaskModal();
       }
@@ -4259,7 +4365,7 @@
           if (parent) {
             const newSubtask = {
               id: generateUUID(),
-              title: '',
+              title: 'New subtask',
               project: parent.project,
               stage: parent.stage || '',
               status: 'TO DO',
@@ -4280,6 +4386,19 @@
             saveToStorage();
             renderTasks();
             renderSummary();
+
+            // Auto-expand subtasks container and focus new subtask
+            const container = document.querySelector(`.subtasks-container[data-parent-id="${parentId}"]`);
+            if (container) {
+              container.style.display = 'block';
+              // Find the new subtask row and scroll to it
+              setTimeout(() => {
+                const newRow = document.querySelector(`.subtask-row[data-task-id="${newSubtask.id}"]`);
+                if (newRow) {
+                  newRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+              }, 50);
+            }
           }
         });
       });
