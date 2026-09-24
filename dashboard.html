@@ -1844,6 +1844,150 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* Subtasks */
+    .subtasks-indicator {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      font-size: 8px;
+      color: var(--text-secondary);
+      padding: 4px;
+      margin: 0 4px;
+    }
+
+    .subtasks-chevron {
+      display: inline-block;
+      transition: transform 0.2s ease;
+      font-size: 9px;
+      min-width: 8px;
+    }
+
+    .subtasks-chevron[data-collapsed="true"] {
+      transform: rotate(-90deg);
+    }
+
+    .subtasks-progress {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .progress-text {
+      font-size: 8px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .progress-bar {
+      display: inline-block;
+      font-size: 8px;
+      letter-spacing: 1px;
+      color: var(--color-todo);
+      white-space: nowrap;
+    }
+
+    .subtasks-container {
+      grid-column: 1 / -1;
+      margin: 8px 0 0 24px;
+      padding: 8px;
+      background: var(--bg-input);
+      border-left: 2px solid var(--border-secondary);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .subtask-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-secondary);
+      border-radius: 2px;
+      font-size: 9px;
+    }
+
+    .subtask-indent {
+      color: var(--text-muted);
+      font-size: 8px;
+      min-width: 12px;
+    }
+
+    .subtask-title {
+      flex: 1;
+      color: var(--text-primary);
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .subtask-status-select {
+      background: var(--bg-input);
+      border: 1px solid var(--border-secondary);
+      color: var(--text-primary);
+      padding: 4px 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 8px;
+      cursor: pointer;
+    }
+
+    .btn-delete-subtask {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 10px;
+      padding: 0;
+      transition: color 0.2s ease;
+    }
+
+    .btn-delete-subtask:hover {
+      color: #d4756a;
+    }
+
+    .add-subtask-row {
+      display: flex;
+      gap: 4px;
+      padding: 6px;
+      background: var(--bg-card);
+      border: 1px dashed var(--border-secondary);
+      border-radius: 2px;
+    }
+
+    .add-subtask-input {
+      flex: 1;
+      background: var(--bg-input);
+      border: 1px solid var(--border-secondary);
+      color: var(--text-primary);
+      padding: 4px 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 8px;
+    }
+
+    .add-subtask-input:focus {
+      outline: none;
+      border-color: var(--text-primary);
+    }
+
+    .btn-add-subtask {
+      background: none;
+      border: 1px solid var(--border-secondary);
+      color: var(--text-primary);
+      cursor: pointer;
+      padding: 4px 6px;
+      font-size: 9px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-add-subtask:hover {
+      border-color: var(--text-primary);
+      background: var(--bg-input);
+    }
   </style>
 </head>
 <body>
@@ -2477,8 +2621,9 @@
 
     function countTasksByStatus() {
       const counts = { 'TO DO': 0, 'IN PROG': 0, 'PENDING': 0, 'DONE': 0 };
+      // Count PARENT TASKS ONLY (exclude subtasks)
       app.tasks.forEach(task => {
-        if (counts.hasOwnProperty(task.status)) {
+        if (!task.parentTaskId && counts.hasOwnProperty(task.status)) {
           counts[task.status]++;
         }
       });
@@ -2486,18 +2631,24 @@
     }
 
     function getTasksByProject(projectName) {
-      return app.tasks.filter(task => task.project === projectName);
+      // Parent tasks only
+      return app.tasks.filter(task => task.project === projectName && !task.parentTaskId);
     }
 
     function calculateCompletion() {
-      if (app.tasks.length === 0) return 0;
-      const done = app.tasks.filter(t => t.status === 'DONE').length;
-      return Math.round((done / app.tasks.length) * 100);
+      // Parent tasks only
+      const parentTasks = app.tasks.filter(t => !t.parentTaskId);
+      if (parentTasks.length === 0) return 0;
+      const done = parentTasks.filter(t => t.status === 'DONE').length;
+      return Math.round((done / parentTasks.length) * 100);
     }
 
     function countOverdue() {
       const today = new Date().toISOString().split('T')[0];
-      return app.tasks.filter(task => task.dueDate < today && task.status !== 'DONE').length;
+      // Parent tasks only
+      return app.tasks.filter(task =>
+        !task.parentTaskId && task.dueDate < today && task.status !== 'DONE'
+      ).length;
     }
 
     // ===== TASK MANAGEMENT =====
@@ -2514,6 +2665,8 @@
         priority: false,
         recurrence: recurrence || { type: 'never' },
         recurrenceParentId: null,
+        parentTaskId: null,
+        subtasks: [],
         createdAt: new Date().toISOString(),
         startedAt: null,
         completedAt: null,
@@ -2606,6 +2759,124 @@
         }
       }
       saveToStorage();
+    }
+
+    // ===== SUBTASKS =====
+    function addSubtask(parentTaskId, title) {
+      const parent = app.tasks.find(t => t.id === parentTaskId);
+      if (!parent || !title.trim()) return null;
+
+      if (!parent.subtasks) {
+        parent.subtasks = [];
+      }
+
+      const subtask = {
+        id: generateUUID(),
+        title: title.trim(),
+        status: 'TO DO',
+        createdAt: new Date().toISOString(),
+        completedAt: null
+      };
+
+      parent.subtasks.push(subtask);
+      saveToStorage();
+      return subtask;
+    }
+
+    function updateSubtaskStatus(parentTaskId, subtaskId, status) {
+      const parent = app.tasks.find(t => t.id === parentTaskId);
+      if (!parent) return;
+
+      const subtask = parent.subtasks.find(s => s.id === subtaskId);
+      if (!subtask) return;
+
+      subtask.status = status;
+      if (status === 'DONE' && !subtask.completedAt) {
+        subtask.completedAt = new Date().toISOString();
+      } else if (status !== 'DONE') {
+        subtask.completedAt = null;
+      }
+
+      // Auto-update parent status if any subtask is IN PROG
+      if (parent.subtasks.some(s => s.status === 'IN PROG') && parent.status === 'TO DO') {
+        parent.status = 'IN PROG';
+        if (!parent.startedAt) {
+          parent.startedAt = new Date().toISOString();
+        }
+        parent.statusHistory.push({ status: 'IN PROG', changedAt: new Date().toISOString() });
+      }
+
+      saveToStorage();
+    }
+
+    function deleteSubtask(parentTaskId, subtaskId) {
+      const parent = app.tasks.find(t => t.id === parentTaskId);
+      if (!parent) return;
+
+      parent.subtasks = parent.subtasks.filter(s => s.id !== subtaskId);
+      saveToStorage();
+    }
+
+    function getSubtaskProgress(parent) {
+      if (!parent.subtasks || parent.subtasks.length === 0) {
+        return { done: 0, total: 0, percent: 0 };
+      }
+
+      const total = parent.subtasks.length;
+      const done = parent.subtasks.filter(s => s.status === 'DONE').length;
+      const percent = Math.round((done / total) * 100);
+
+      return { done, total, percent };
+    }
+
+    function renderSubtaskProgress(parent) {
+      const progress = getSubtaskProgress(parent);
+      if (progress.total === 0) return '';
+
+      const filled = Math.round((progress.percent / 100) * 8);
+      const empty = 8 - filled;
+      const bar = '█'.repeat(filled) + '░'.repeat(empty);
+
+      return `
+        <div class="subtasks-indicator" data-task-id="${parent.id}">
+          <span class="subtasks-chevron" data-collapsed="false">▼</span>
+          <span class="subtasks-progress">
+            <span class="progress-text">${progress.total} subtask${progress.total !== 1 ? 's' : ''}</span>
+            <span class="progress-bar">${bar} ${progress.percent}%</span>
+          </span>
+        </div>
+      `;
+    }
+
+    function renderSubtasksContainer(parent) {
+      if (!parent.subtasks || parent.subtasks.length === 0) return '';
+
+      let html = `<div class="subtasks-container" data-parent-id="${parent.id}">`;
+
+      parent.subtasks.forEach(subtask => {
+        html += `
+          <div class="subtask-row" data-subtask-id="${subtask.id}">
+            <span class="subtask-indent">├─</span>
+            <span class="subtask-title">${subtask.title}</span>
+            <select class="subtask-status-select" data-subtask-id="${subtask.id}" data-parent-id="${parent.id}">
+              <option value="TO DO" ${subtask.status === 'TO DO' ? 'selected' : ''}>TO DO</option>
+              <option value="IN PROG" ${subtask.status === 'IN PROG' ? 'selected' : ''}>IN PROG</option>
+              <option value="PENDING" ${subtask.status === 'PENDING' ? 'selected' : ''}>PENDING</option>
+              <option value="DONE" ${subtask.status === 'DONE' ? 'selected' : ''}>DONE</option>
+            </select>
+            <button class="btn-delete-subtask" data-subtask-id="${subtask.id}" data-parent-id="${parent.id}">×</button>
+          </div>
+        `;
+      });
+
+      html += `
+        <div class="add-subtask-row">
+          <input type="text" class="add-subtask-input" placeholder="Add subtask..." data-parent-id="${parent.id}" />
+          <button class="btn-add-subtask" data-parent-id="${parent.id}">+</button>
+        </div>
+      </div>`;
+
+      return html;
     }
 
     function toggleTaskPriority(taskId) {
@@ -2853,6 +3124,21 @@
 
             tasksContainer.appendChild(card);
 
+            // Add subtasks progress indicator
+            if (task.subtasks && task.subtasks.length > 0) {
+              const progressDiv = document.createElement('div');
+              progressDiv.innerHTML = renderSubtaskProgress(task);
+              tasksContainer.appendChild(progressDiv);
+
+              // Add subtasks container (hidden by default)
+              const subtasksDiv = document.createElement('div');
+              subtasksDiv.innerHTML = renderSubtasksContainer(task);
+              subtasksDiv.style.display = 'none';
+              subtasksDiv.className = 'subtasks-container-wrapper';
+              subtasksDiv.setAttribute('data-parent-id', task.id);
+              tasksContainer.appendChild(subtasksDiv);
+            }
+
             if (app.noteExpandedState[task.id]) {
               const notesEditor = document.createElement('div');
               notesEditor.className = 'task-notes-editor';
@@ -2917,6 +3203,21 @@
               `;
 
               doneSection.appendChild(card);
+
+              // Add subtasks progress indicator
+              if (task.subtasks && task.subtasks.length > 0) {
+                const progressDiv = document.createElement('div');
+                progressDiv.innerHTML = renderSubtaskProgress(task);
+                doneSection.appendChild(progressDiv);
+
+                // Add subtasks container (hidden by default)
+                const subtasksDiv = document.createElement('div');
+                subtasksDiv.innerHTML = renderSubtasksContainer(task);
+                subtasksDiv.style.display = 'none';
+                subtasksDiv.className = 'subtasks-container-wrapper';
+                subtasksDiv.setAttribute('data-parent-id', task.id);
+                doneSection.appendChild(subtasksDiv);
+              }
 
               if (app.noteExpandedState[task.id]) {
                 const notesEditor = document.createElement('div');
@@ -3704,6 +4005,126 @@
         });
 
         textarea.focus();
+      });
+
+      // Subtasks toggle
+      document.querySelectorAll('.subtasks-indicator').forEach(indicator => {
+        indicator.addEventListener('click', (e) => {
+          const parentId = indicator.dataset.taskId;
+          const container = document.querySelector(
+            `.subtasks-container-wrapper[data-parent-id="${parentId}"]`
+          );
+          const chevron = indicator.querySelector('.subtasks-chevron');
+
+          if (container) {
+            const isHidden = container.style.display === 'none';
+            container.style.display = isHidden ? 'block' : 'none';
+            chevron.setAttribute('data-collapsed', !isHidden);
+            attachSubtaskEventListeners();
+          }
+        });
+      });
+
+      // Subtask status change
+      document.querySelectorAll('.subtask-status-select').forEach(select => {
+        select.addEventListener('change', (e) => {
+          const parentId = e.target.dataset.parentId;
+          const subtaskId = e.target.dataset.subtaskId;
+          const newStatus = e.target.value;
+
+          updateSubtaskStatus(parentId, subtaskId, newStatus);
+          renderTasks();
+          renderSummary();
+        });
+      });
+
+      // Subtask delete
+      document.querySelectorAll('.btn-delete-subtask').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const parentId = btn.dataset.parentId;
+          const subtaskId = btn.dataset.subtaskId;
+
+          if (confirm('Delete this subtask?')) {
+            deleteSubtask(parentId, subtaskId);
+            renderTasks();
+            renderSummary();
+          }
+        });
+      });
+
+      // Add subtask
+      document.querySelectorAll('.btn-add-subtask').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const parentId = btn.dataset.parentId;
+          const input = btn.closest('.add-subtask-row').querySelector('.add-subtask-input');
+          const title = input.value.trim();
+
+          if (title) {
+            addSubtask(parentId, title);
+            input.value = '';
+            input.focus();
+            renderTasks();
+            renderSummary();
+          }
+        });
+      });
+
+      // Subtask input enter key
+      document.querySelectorAll('.add-subtask-input').forEach(input => {
+        input.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const btn = input.closest('.add-subtask-row').querySelector('.btn-add-subtask');
+            btn.click();
+          }
+        });
+      });
+    }
+
+    function attachSubtaskEventListeners() {
+      // Re-attach subtask listeners (called after subtasks are rendered)
+      document.querySelectorAll('.subtask-status-select').forEach(select => {
+        select.removeEventListener('change', null);
+        select.addEventListener('change', (e) => {
+          const parentId = e.target.dataset.parentId;
+          const subtaskId = e.target.dataset.subtaskId;
+          const newStatus = e.target.value;
+
+          updateSubtaskStatus(parentId, subtaskId, newStatus);
+          renderTasks();
+          renderSummary();
+        });
+      });
+
+      document.querySelectorAll('.btn-delete-subtask').forEach(btn => {
+        btn.removeEventListener('click', null);
+        btn.addEventListener('click', (e) => {
+          const parentId = btn.dataset.parentId;
+          const subtaskId = btn.dataset.subtaskId;
+
+          if (confirm('Delete this subtask?')) {
+            deleteSubtask(parentId, subtaskId);
+            renderTasks();
+            renderSummary();
+          }
+        });
+      });
+
+      document.querySelectorAll('.btn-add-subtask').forEach(btn => {
+        btn.removeEventListener('click', null);
+        btn.addEventListener('click', (e) => {
+          const parentId = btn.dataset.parentId;
+          const input = btn.closest('.add-subtask-row').querySelector('.add-subtask-input');
+          const title = input.value.trim();
+
+          if (title) {
+            addSubtask(parentId, title);
+            input.value = '';
+            input.focus();
+            renderTasks();
+            renderSummary();
+          }
+        });
       });
     }
 
