@@ -161,6 +161,16 @@ Repeats every day
 - **Manual restore:** Select any version from history in SETTINGS
 - **No data loss:** All backups stored locally in browser
 
+### ⏲️ Pomodoro Timer (Phase 7)
+- **Work/break cycles** - Configurable durations (default 25min work, 5min break)
+- **Session tracking** - Completed pomodoros counted per task (🍅 display)
+- **Auto-transition** - Work → break → work cycle with notifications
+- **Skip Break button** - Jump directly to next work session
+- **Sound alerts** - Beep notification when session completes
+- **Visual feedback** - Pomodoro count shown on all task cards
+- **TODAY tab** - Focus view for tagged tasks with timer integration
+- **Configurable** - Work/break durations editable in SETTINGS
+
 ---
 
 ## File Size & Performance
@@ -267,14 +277,13 @@ Repeats every day
 
 ## What's Not Included
 
-- ❌ Manual time logging (hours per task) — automatic tracking from status history instead
 - ❌ Markdown in notes
-- ❌ Tags/labels
+- ❌ Tags/labels (planned enhancement: streams as tags)
 - ❌ Recurring meetings (coming soon)
 - ❌ Task dependencies
 - ❌ Collaboration/comments
 - ❌ Cloud sync
-- ❌ Mobile app
+- ❌ Mobile app (responsive design planned)
 
 ---
 
