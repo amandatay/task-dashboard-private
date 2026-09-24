@@ -2825,6 +2825,44 @@
       app.noteExpandedState = JSON.parse(localStorage.getItem('noteExpandedState')) || {};
       app.projectExpandedState = JSON.parse(localStorage.getItem('projectExpandedState')) || {};
       app.dataBackups = JSON.parse(localStorage.getItem('dataBackups')) || [];
+
+      // Migrate old subtasks array format to parentTaskId
+      migrateSubtasks();
+    }
+
+    function migrateSubtasks() {
+      const tasksToAdd = [];
+      app.tasks.forEach(task => {
+        if (task.subtasks && task.subtasks.length > 0) {
+          // Convert old subtasks array to individual tasks with parentTaskId
+          task.subtasks.forEach(oldSubtask => {
+            const newSubtask = {
+              id: oldSubtask.id || generateUUID(),
+              title: oldSubtask.title,
+              project: task.project,
+              stage: task.stage || '',
+              status: oldSubtask.status || 'TO DO',
+              dueDate: null,
+              notes: '',
+              priority: false,
+              focusTagged: false,
+              recurrence: { type: 'never' },
+              recurrenceParentId: null,
+              parentTaskId: task.id,
+              createdAt: oldSubtask.createdAt || new Date().toISOString(),
+              startedAt: null,
+              completedAt: oldSubtask.completedAt || null,
+              statusHistory: [{ status: oldSubtask.status || 'TO DO', changedAt: new Date().toISOString() }],
+              order: app.tasks.length + tasksToAdd.length
+            };
+            tasksToAdd.push(newSubtask);
+          });
+          // Remove old subtasks array
+          delete task.subtasks;
+        }
+      });
+      // Add migrated subtasks
+      app.tasks.push(...tasksToAdd);
     }
 
     function createBackup() {
