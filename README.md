@@ -22,7 +22,9 @@ A minimal, offline-first task management + meeting planner for mindful planning.
 - 4-column board: TO DO | IN PROG | PENDING | DONE
 - **Project selector** - view one project at a time
 - Drag cards between columns to change status
-- Task modal for detailed editing
+- **Nested subtasks** - subtasks indented beneath parent tasks (non-draggable)
+- Parent tasks draggable between columns, subtasks updated via modal
+- Task modal for detailed editing (parent or subtask)
 - Auto-timestamps for started/completed
 
 ### 📅 CALENDAR View - Weekly Planning
@@ -132,6 +134,19 @@ Repeats every day
 
 ---
 
+## Subtasks
+
+- **Create subtasks** in LIST view using the "+ subtask" button on parent tasks
+- **Subtasks are full tasks** - same properties as parent tasks (status, date, notes, priority, recurrence)
+- **Parent-child relationship** - subtasks linked via parentTaskId field
+- **View in LIST** - subtasks shown indented beneath parent tasks (collapsible)
+- **View in KANBAN** - subtasks nested beneath parents in status columns
+- **Manage in modal** - click any parent task to see/add/edit subtasks via checkboxes
+- **Independent status** - subtasks have separate statuses from parent (can be DONE while parent is IN PROG)
+- **Orphan subtasks** - subtasks without parents display as regular tasks
+
+---
+
 ### ⏱ Time Tracking (Phase 6)
 - Automatic time calculation from task status history
 - No manual timer — just track when tasks change status
@@ -150,7 +165,7 @@ Repeats every day
 
 ## File Size & Performance
 
-- **Single file:** `dashboard.html` (~65 KB)
+- **Single file:** `dashboard.html` (~194 KB)
 - **Load time:** Instant (no external requests)
 - **Browser support:** Chrome, Firefox, Safari, Edge
 - **Rendering:** O(n) where n = number of tasks/meetings
