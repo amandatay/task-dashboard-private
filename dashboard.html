@@ -2186,6 +2186,37 @@
     .btn-toggle-focus:hover {
       opacity: 0.7;
     }
+
+    .time-section {
+      margin-bottom: 16px;
+    }
+
+    .time-section-header {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: var(--text-primary);
+      padding: 8px 12px;
+      background: var(--bg-input);
+      border-left: 3px solid var(--color-todo);
+      margin-bottom: 8px;
+    }
+
+    .today-meeting-item {
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--color-todo);
+      border-left: 3px solid var(--color-todo);
+      border-radius: 2px;
+      transition: all 0.2s ease;
+    }
+
+    .today-meeting-item:hover {
+      background: var(--bg-input);
+      border-color: var(--color-inprog);
+      border-left-color: var(--color-inprog);
+    }
   </style>
 </head>
 <body>
@@ -2193,8 +2224,8 @@
     <div class="sidebar">
       <div class="sidebar-title">📋 VIEWS</div>
       <div class="nav-tabs">
-        <button class="nav-tab active" data-tab="tasks">TASKS</button>
-        <button class="nav-tab" data-tab="today">TODAY</button>
+        <button class="nav-tab active" data-tab="today">TODAY</button>
+        <button class="nav-tab" data-tab="tasks">TASKS</button>
         <button class="nav-tab" data-tab="timeline">PROJECTS</button>
         <button class="nav-tab" data-tab="calendar">CALENDAR</button>
         <button class="nav-tab" data-tab="summary">SUMMARY</button>
@@ -2215,7 +2246,7 @@
 
     <div class="main">
       <div class="header">
-        <div class="header-title" id="header-title">🕐 TASKS</div>
+        <div class="header-title" id="header-title">💚 TODAY</div>
         <div style="display: flex; align-items: center; gap: 16px;">
           <button id="theme-toggle-btn" class="theme-toggle-btn" title="Toggle light/dark mode">🌙</button>
           <div class="header-time" id="header-time">22 Sep 2026 • 14:32 SGT</div>
@@ -2224,7 +2255,7 @@
 
       <div class="content">
         <!-- TASKS TAB (LIST + KANBAN) -->
-        <div id="tasks-view" class="tab-content active">
+        <div id="tasks-view" class="tab-content" style="display: none;">
           <!-- Quick Add Form (Expandable) -->
           <div class="quick-add-container">
             <div class="quick-add-form">
@@ -2391,7 +2422,7 @@
         </div>
 
         <!-- TODAY TAB (Focus + Pomodoro) -->
-        <div id="today-view" class="tab-content" style="display: none;">
+        <div id="today-view" class="tab-content active">
           <div class="today-header">
             <h2 class="today-title">TODAY'S FOCUS</h2>
             <span class="today-date" id="todayDate">Today</span>
@@ -4364,6 +4395,7 @@
     // ===== FOCUS & POMODORO =====
     function renderTodayView() {
       const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
       document.getElementById('todayDate').textContent = today.toLocaleDateString('en-US', {
         weekday: 'short',
         month: 'short',
@@ -4373,6 +4405,9 @@
 
       // Get focused tasks (parent tasks only)
       const focusedTasks = app.tasks.filter(t => t.focusTagged && !t.parentTaskId);
+
+      // Get today's meetings
+      const todayMeetings = app.meetings.filter(m => m.date === todayStr).sort((a, b) => a.time.localeCompare(b.time));
 
       // Update stats
       const inProgress = focusedTasks.filter(t => t.status === 'IN PROG').length;
@@ -4384,7 +4419,7 @@
 
       const container = document.getElementById('focusTasksContainer');
 
-      if (focusedTasks.length === 0) {
+      if (focusedTasks.length === 0 && todayMeetings.length === 0) {
         container.innerHTML = '';
         document.getElementById('focusEmptyState').style.display = 'block';
         return;
@@ -4392,53 +4427,114 @@
 
       document.getElementById('focusEmptyState').style.display = 'none';
 
-      // Sort: IN PROG first, then TO DO/PENDING, then DONE
+      // Helper to get time section
+      function getTimeSection(timeStr) {
+        const hour = parseInt(timeStr.split(':')[0], 10);
+        if (hour < 12) return 'morning';
+        if (hour < 18) return 'afternoon';
+        return 'evening';
+      }
+
+      // Organize by time sections
+      const sections = {
+        morning: { label: '🌅 MORNING', meetings: [], tasks: [] },
+        afternoon: { label: '☀️ AFTERNOON', meetings: [], tasks: [] },
+        evening: { label: '🌙 EVENING', meetings: [], tasks: [] }
+      };
+
+      // Add meetings to sections
+      todayMeetings.forEach(meeting => {
+        const section = getTimeSection(meeting.time);
+        sections[section].meetings.push(meeting);
+      });
+
+      // Add focused tasks to sections (unsorted, no time constraint)
       const sorted = focusedTasks.sort((a, b) => {
         const priority = { 'IN PROG': 0, 'TO DO': 1, 'PENDING': 2, 'DONE': 3 };
         return (priority[a.status] || 99) - (priority[b.status] || 99);
       });
+      sorted.forEach(task => {
+        sections.morning.tasks.push(task);
+      });
 
       let html = '';
 
-      sorted.forEach(task => {
-        const isDone = task.status === 'DONE';
-        const isInProgress = task.status === 'IN PROG';
-        const priority = task.priority ? '🚩' : '';
+      // Render each section
+      ['morning', 'afternoon', 'evening'].forEach(sectionKey => {
+        const section = sections[sectionKey];
+        const hasContent = section.meetings.length > 0 || section.tasks.length > 0;
 
-        html += `
-          <div class="focus-task-item" data-task-id="${task.id}" style="${isDone ? 'opacity: 0.6;' : ''}">
-            <div class="focus-task-header">
-              <span class="focus-task-title" style="${isDone ? 'text-decoration: line-through;' : ''}">${task.title}</span>
-              ${priority ? `<span style="font-size: 12px;">${priority}</span>` : ''}
-              ${isInProgress ? '<span class="focus-task-status">⏱ IN PROGRESS</span>' : ''}
-            </div>
-            <div style="font-size: 8px; color: var(--text-secondary); margin-bottom: 6px;">
-              ${task.project}${task.stage ? ' → ' + task.stage : ''}
-            </div>
-        `;
+        if (hasContent) {
+          html += `<div class="time-section">
+            <div class="time-section-header">${section.label}</div>`;
 
-        if (!isDone) {
-          html += `
-            <div class="focus-task-actions">
-              <button class="btn-focus-action" data-task-id="${task.id}" data-action="start">
-                ${isInProgress ? 'In Progress' : 'Start'}
-              </button>
-              <button class="btn-focus-action" data-task-id="${task.id}" data-action="done">Mark Done</button>
-              <button class="btn-focus-remove" data-task-id="${task.id}">×</button>
-            </div>
-          `;
-        } else {
-          html += `
-            <div style="font-size: 8px; color: var(--text-muted); font-style: italic;">
-              Completed ${task.completedAt ? formatDate(new Date(task.completedAt)) : 'today'}
-            </div>
-          `;
+          // Render meetings
+          section.meetings.forEach(meeting => {
+            const priorityIcon = meeting.priority ? '★' : '';
+            html += `
+              <div class="today-meeting-item" data-meeting-id="${meeting.id}" style="cursor: pointer;">
+                <div style="font-size: 9px; font-weight: bold; color: var(--text-primary);">
+                  ${priorityIcon} ${meeting.time} – ${meeting.title}
+                </div>
+                <div style="font-size: 8px; color: var(--text-secondary); margin-top: 2px;">
+                  ${meeting.duration}m${meeting.project ? ' • ' + meeting.project : ''}
+                </div>
+              </div>
+            `;
+          });
+
+          // Render tasks
+          section.tasks.forEach(task => {
+            const isDone = task.status === 'DONE';
+            const isInProgress = task.status === 'IN PROG';
+            const priority = task.priority ? '🚩' : '';
+
+            html += `
+              <div class="focus-task-item" data-task-id="${task.id}" style="${isDone ? 'opacity: 0.6;' : ''}">
+                <div class="focus-task-header">
+                  <span class="focus-task-title" style="${isDone ? 'text-decoration: line-through;' : ''}">${task.title}</span>
+                  ${priority ? `<span style="font-size: 12px;">${priority}</span>` : ''}
+                  ${isInProgress ? '<span class="focus-task-status">⏱ IN PROGRESS</span>' : ''}
+                </div>
+                <div style="font-size: 8px; color: var(--text-secondary); margin-bottom: 6px;">
+                  ${task.project}${task.stage ? ' → ' + task.stage : ''}
+                </div>
+            `;
+
+            if (!isDone) {
+              html += `
+                <div class="focus-task-actions">
+                  <button class="btn-focus-action" data-task-id="${task.id}" data-action="start">
+                    ${isInProgress ? 'In Progress' : 'Start'}
+                  </button>
+                  <button class="btn-focus-action" data-task-id="${task.id}" data-action="done">Mark Done</button>
+                  <button class="btn-focus-remove" data-task-id="${task.id}">×</button>
+                </div>
+              `;
+            } else {
+              html += `
+                <div style="font-size: 8px; color: var(--text-muted); font-style: italic;">
+                  Completed ${task.completedAt ? formatDate(new Date(task.completedAt)) : 'today'}
+                </div>
+              `;
+            }
+
+            html += '</div>';
+          });
+
+          html += '</div>';
         }
-
-        html += '</div>';
       });
 
       container.innerHTML = html;
+
+      // Attach meeting click handlers
+      document.querySelectorAll('.today-meeting-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const meetingId = el.getAttribute('data-meeting-id');
+          openMeetingModal(meetingId);
+        });
+      });
     }
 
     function updatePomodoroDisplay() {
@@ -5510,7 +5606,7 @@
     // Load saved tasks view preference
     app.currentTasksView = localStorage.getItem('currentTasksView') || 'list';
 
-    const savedTab = localStorage.getItem('currentTab') || 'tasks';
+    const savedTab = localStorage.getItem('currentTab') || 'today';
     switchTab(savedTab);
   </script>
 </body>
