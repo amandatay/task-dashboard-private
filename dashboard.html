@@ -2471,6 +2471,7 @@
               <button id="pomodoroPause" class="btn-pomodoro" style="display: none;">Pause</button>
               <button id="pomodoroReset" class="btn-pomodoro-secondary">Reset</button>
               <button id="pomodoroAdd5" class="btn-pomodoro-secondary">+5 min</button>
+              <button id="pomodoroSkipBreak" class="btn-pomodoro-secondary" style="display: none;">Skip Break</button>
             </div>
           </div>
 
@@ -2769,6 +2770,21 @@
           </div>
 
           <div class="settings-section">
+            <div class="settings-section-title">Pomodoro Timer</div>
+            <div style="font-size: 9px; color: var(--text-secondary); margin-bottom: 12px;">
+              Configure work and break durations for your Pomodoro sessions.
+            </div>
+            <div class="setting-item">
+              <label>Work Duration (minutes):</label>
+              <input id="pomodoro-work-duration" type="number" min="5" max="120" value="25" style="width: 80px;">
+            </div>
+            <div class="setting-item">
+              <label>Break Duration (minutes):</label>
+              <input id="pomodoro-break-duration" type="number" min="1" max="60" value="5" style="width: 80px;">
+            </div>
+          </div>
+
+          <div class="settings-section">
             <div class="settings-section-title">Backup & Restore</div>
             <div style="font-size: 9px; color: var(--text-secondary); margin-bottom: 12px;">
               Automatic backups every 10 minutes (configurable). Keep up to 10 versions.
@@ -2817,7 +2833,11 @@
         pomodoroRunning: false,
         pomodoroTimeRemaining: 1500, // 25 minutes in seconds
         pomodoroInterval: null,
-        pomodoroStartTime: null
+        pomodoroStartTime: null,
+        currentTaskId: null, // Task being worked on
+        sessionType: 'work', // 'work' or 'break'
+        workDuration: 25, // minutes (configurable)
+        breakDuration: 5 // minutes (configurable)
       },
       openTaskModalId: null  // Track which task's modal is open
     };
@@ -2837,13 +2857,24 @@
       app.tasks = JSON.parse(localStorage.getItem('tasks')) || [];
       app.meetings = JSON.parse(localStorage.getItem('meetings')) || [];
       app.projects = JSON.parse(localStorage.getItem('projects')) || [];
-      app.settings = JSON.parse(localStorage.getItem('settings')) || { autoSaveFrequency: 10 };
+      app.settings = JSON.parse(localStorage.getItem('settings')) || {
+        autoSaveFrequency: 10,
+        pomodoroWorkDuration: 25,
+        pomodoroBreakDuration: 5
+      };
+      // Ensure defaults exist
+      if (!app.settings.pomodoroWorkDuration) app.settings.pomodoroWorkDuration = 25;
+      if (!app.settings.pomodoroBreakDuration) app.settings.pomodoroBreakDuration = 5;
+
       app.noteExpandedState = JSON.parse(localStorage.getItem('noteExpandedState')) || {};
       app.projectExpandedState = JSON.parse(localStorage.getItem('projectExpandedState')) || {};
       app.dataBackups = JSON.parse(localStorage.getItem('dataBackups')) || [];
 
       // Migrate old subtasks array format to parentTaskId
       migrateSubtasks();
+
+      // Ensure all tasks have pomodoroCount
+      migratePomodoroCount();
     }
 
     function migrateSubtasks() {
@@ -2879,6 +2910,14 @@
       });
       // Add migrated subtasks
       app.tasks.push(...tasksToAdd);
+    }
+
+    function migratePomodoroCount() {
+      app.tasks.forEach(task => {
+        if (!('pomodoroCount' in task)) {
+          task.pomodoroCount = 0;
+        }
+      });
     }
 
     function createBackup() {
@@ -4824,6 +4863,7 @@
               <div class="focus-task-header">
                 <span class="focus-task-title" style="${isDone ? 'text-decoration: line-through;' : ''}">${task.title}</span>
                 ${priority ? `<span style="font-size: 12px;">${priority}</span>` : ''}
+                ${task.pomodoroCount > 0 ? `<span style="font-size: 8px; color: var(--text-secondary);">🍅 ${task.pomodoroCount}</span>` : ''}
                 ${isInProgress ? '<span class="focus-task-status">⏱ IN PROGRESS</span>' : ''}
               </div>
               <div style="font-size: 8px; color: var(--text-secondary); margin-bottom: 6px;">
@@ -4867,11 +4907,21 @@
     }
 
     function updatePomodoroDisplay() {
+      // Sync durations from settings
+      app.focusState.workDuration = app.settings.pomodoroWorkDuration || 25;
+      app.focusState.breakDuration = app.settings.pomodoroBreakDuration || 5;
+
       const minutes = Math.floor(app.focusState.pomodoroTimeRemaining / 60);
       const seconds = app.focusState.pomodoroTimeRemaining % 60;
 
       const display = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
       document.getElementById('pomodoroTime').textContent = display;
+
+      // Show Skip Break button only during break
+      const skipBtn = document.getElementById('pomodoroSkipBreak');
+      if (skipBtn) {
+        skipBtn.style.display = app.focusState.sessionType === 'break' ? 'inline-block' : 'none';
+      }
     }
 
     function startPomodoro() {
@@ -4900,8 +4950,10 @@
 
     function resetPomodoro() {
       pausePomodoro();
-      app.focusState.pomodoroTimeRemaining = 1500; // 25 min
+      app.focusState.sessionType = 'work';
+      app.focusState.pomodoroTimeRemaining = app.focusState.workDuration * 60;
       updatePomodoroDisplay();
+      updatePomodoroLabel();
     }
 
     function addPomodoroTime() {
@@ -4909,10 +4961,95 @@
       updatePomodoroDisplay();
     }
 
+    function skipPomodoroBreak() {
+      pausePomodoro();
+      app.focusState.sessionType = 'work';
+      app.focusState.pomodoroTimeRemaining = app.focusState.workDuration * 60;
+      updatePomodoroDisplay();
+      updatePomodoroLabel();
+    }
+
+    function updatePomodoroLabel() {
+      const label = app.focusState.sessionType === 'work' ? 'work' : 'break';
+      document.querySelector('.pomodoro-label').textContent = label;
+    }
+
+    function playPomodoroSound() {
+      // Simple beep using Web Audio API
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+      } catch (e) {
+        // Fallback: console message if audio context fails
+      }
+    }
+
+    function showPomodoroNotification(message, type) {
+      // Try browser notification if available
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Pomodoro', { body: message });
+      } else {
+        // Fallback: visual toast
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          padding: 12px 16px;
+          background-color: ${type === 'success' ? 'rgba(122, 170, 106, 0.9)' : 'rgba(166, 176, 138, 0.9)'};
+          color: white;
+          border-radius: 4px;
+          font-size: 10px;
+          z-index: 10000;
+          animation: slideIn 0.3s ease-out;
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+      }
+    }
+
     function completePomodoro() {
       pausePomodoro();
-      alert('✓ Pomodoro complete! Take a 5-minute break.');
-      resetPomodoro();
+      playPomodoroSound();
+
+      if (app.focusState.sessionType === 'work') {
+        // Work session complete - increment counter
+        if (app.focusState.currentTaskId) {
+          const task = app.tasks.find(t => t.id === app.focusState.currentTaskId);
+          if (task) {
+            task.pomodoroCount = (task.pomodoroCount || 0) + 1;
+            saveToStorage();
+          }
+        }
+
+        // Switch to break
+        app.focusState.sessionType = 'break';
+        app.focusState.pomodoroTimeRemaining = app.focusState.breakDuration * 60;
+        updatePomodoroDisplay();
+        updatePomodoroLabel();
+        showPomodoroNotification('Work complete! Break time.', 'success');
+      } else {
+        // Break complete - switch back to work
+        app.focusState.sessionType = 'work';
+        app.focusState.pomodoroTimeRemaining = app.focusState.workDuration * 60;
+        updatePomodoroDisplay();
+        updatePomodoroLabel();
+        showPomodoroNotification('Break over! Ready for another round?', 'info');
+      }
     }
 
     function attachSubtaskEventListeners() {
@@ -5264,6 +5401,8 @@
       container.innerHTML = '';
 
       document.getElementById('autosave-frequency').value = app.settings.autoSaveFrequency || 10;
+      document.getElementById('pomodoro-work-duration').value = app.settings.pomodoroWorkDuration || 25;
+      document.getElementById('pomodoro-break-duration').value = app.settings.pomodoroBreakDuration || 5;
 
       if (app.dataBackups.length === 0) {
         const el = document.createElement('div');
@@ -5740,6 +5879,8 @@
     document.getElementById('save-settings-btn').addEventListener('click', () => {
       app.settings.userName = document.getElementById('settings-username').value;
       app.settings.autoSaveFrequency = parseInt(document.getElementById('autosave-frequency').value) || 10;
+      app.settings.pomodoroWorkDuration = parseInt(document.getElementById('pomodoro-work-duration').value) || 25;
+      app.settings.pomodoroBreakDuration = parseInt(document.getElementById('pomodoro-break-duration').value) || 5;
       saveToStorage();
       renderTasks();
       updateStats();
@@ -5748,6 +5889,26 @@
 
     document.getElementById('autosave-frequency').addEventListener('change', (e) => {
       app.settings.autoSaveFrequency = parseInt(e.target.value) || 10;
+      saveToStorage();
+    });
+
+    document.getElementById('pomodoro-work-duration').addEventListener('change', (e) => {
+      app.settings.pomodoroWorkDuration = parseInt(e.target.value) || 25;
+      app.focusState.workDuration = app.settings.pomodoroWorkDuration;
+      if (!app.focusState.pomodoroRunning && app.focusState.sessionType === 'work') {
+        app.focusState.pomodoroTimeRemaining = app.focusState.workDuration * 60;
+        updatePomodoroDisplay();
+      }
+      saveToStorage();
+    });
+
+    document.getElementById('pomodoro-break-duration').addEventListener('change', (e) => {
+      app.settings.pomodoroBreakDuration = parseInt(e.target.value) || 5;
+      app.focusState.breakDuration = app.settings.pomodoroBreakDuration;
+      if (!app.focusState.pomodoroRunning && app.focusState.sessionType === 'break') {
+        app.focusState.pomodoroTimeRemaining = app.focusState.breakDuration * 60;
+        updatePomodoroDisplay();
+      }
       saveToStorage();
     });
 
@@ -5799,6 +5960,7 @@
     document.getElementById('pomodoroPause').addEventListener('click', pausePomodoro);
     document.getElementById('pomodoroReset').addEventListener('click', resetPomodoro);
     document.getElementById('pomodoroAdd5').addEventListener('click', addPomodoroTime);
+    document.getElementById('pomodoroSkipBreak').addEventListener('click', skipPomodoroBreak);
 
     // Focus task actions
     document.addEventListener('click', (e) => {
@@ -5807,6 +5969,7 @@
         const taskId = e.target.dataset.taskId;
         const task = app.tasks.find(t => t.id === taskId);
         if (task) {
+          app.focusState.currentTaskId = taskId;
           if (task.status === 'IN PROG') {
             // Already in progress, do nothing (could add toggle to PENDING)
           } else {
@@ -5907,6 +6070,11 @@
     loadTheme();
     loadFromStorage();
     initDefaults();
+
+    // Initialize Pomodoro durations from settings
+    app.focusState.workDuration = app.settings.pomodoroWorkDuration || 25;
+    app.focusState.breakDuration = app.settings.pomodoroBreakDuration || 5;
+    app.focusState.pomodoroTimeRemaining = app.focusState.workDuration * 60;
 
     // Auto-restore latest backup on page load
     if (app.dataBackups.length > 0) {
