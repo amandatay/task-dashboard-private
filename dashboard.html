@@ -1846,6 +1846,31 @@
     }
 
     /* Subtasks */
+    .subtask-add-button-row {
+      padding: 8px 12px 0 12px;
+      margin-bottom: 8px;
+    }
+
+    .btn-add-first-subtask {
+      width: 100%;
+      padding: 8px;
+      background-color: transparent;
+      border: 1px dashed var(--border-default);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      transition: all 0.2s ease;
+    }
+
+    .btn-add-first-subtask:hover {
+      border-color: var(--color-inprog);
+      color: var(--color-inprog);
+      background-color: var(--bg-input);
+    }
+
     .subtasks-indicator {
       display: flex;
       gap: 8px;
@@ -3402,8 +3427,9 @@
 
             tasksContainer.appendChild(card);
 
-            // Add subtasks progress indicator
+            // Handle subtasks display
             if (task.subtasks && task.subtasks.length > 0) {
+              // Show progress indicator for existing subtasks
               const progressDiv = document.createElement('div');
               progressDiv.innerHTML = renderSubtaskProgress(task);
               tasksContainer.appendChild(progressDiv);
@@ -3415,6 +3441,17 @@
               subtasksDiv.className = 'subtasks-container-wrapper';
               subtasksDiv.setAttribute('data-parent-id', task.id);
               tasksContainer.appendChild(subtasksDiv);
+            } else {
+              // Show "Add Subtask" button for tasks without subtasks
+              const addSubtaskDiv = document.createElement('div');
+              addSubtaskDiv.className = 'subtask-add-button-row';
+              addSubtaskDiv.setAttribute('data-parent-id', task.id);
+              addSubtaskDiv.innerHTML = `
+                <button class="btn-add-first-subtask" data-parent-id="${task.id}">
+                  + Add Subtask
+                </button>
+              `;
+              tasksContainer.appendChild(addSubtaskDiv);
             }
 
             if (app.noteExpandedState[task.id]) {
@@ -4346,6 +4383,26 @@
           updateSubtaskStatus(parentId, subtaskId, newStatus);
           renderTasks();
           renderSummary();
+        });
+      });
+
+      // Add first subtask (when no subtasks exist)
+      document.querySelectorAll('.btn-add-first-subtask').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const parentId = btn.dataset.parentId;
+          const parent = app.tasks.find(t => t.id === parentId);
+          if (parent) {
+            // Initialize subtasks array if needed
+            if (!parent.subtasks) {
+              parent.subtasks = [];
+            }
+            // Add first empty subtask
+            addSubtask(parentId, 'New subtask');
+            saveToStorage();
+            renderTasks();
+            renderSummary();
+          }
         });
       });
 
