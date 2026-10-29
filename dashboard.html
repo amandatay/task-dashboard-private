@@ -2242,6 +2242,220 @@
       border-color: var(--color-inprog);
       border-left-color: var(--color-inprog);
     }
+
+    /* ARCHIVE TAB */
+    .archive-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .archive-view-controls {
+      display: flex;
+      gap: 6px;
+    }
+
+    .archive-view-btn {
+      padding: 5px 10px;
+      background: transparent;
+      border: 1px solid var(--border-secondary);
+      color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+      text-transform: uppercase;
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+
+    .archive-view-btn.active {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border-color: var(--text-primary);
+    }
+
+    .archive-view-btn:hover:not(.active) {
+      color: var(--text-secondary);
+      border-color: var(--border-default);
+    }
+
+    .archive-count-total {
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+
+    .archive-month-folder {
+      margin-bottom: 20px;
+    }
+
+    .archive-month-tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: var(--bg-card);
+      border-top: 3px solid var(--color-inprog);
+      border-left: 1px solid var(--border-secondary);
+      border-right: 1px solid var(--border-secondary);
+      border-bottom: none;
+      cursor: pointer;
+      user-select: none;
+      font-weight: bold;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .archive-month-tab:hover {
+      opacity: 0.85;
+    }
+
+    .archive-month-toggle {
+      font-size: 9px;
+      color: var(--text-muted);
+      transition: transform 0.1s;
+    }
+
+    .archive-month-count {
+      margin-left: auto;
+      font-size: 9px;
+      font-weight: normal;
+      color: var(--text-secondary);
+      background: var(--bg-input);
+      padding: 1px 6px;
+      border: 1px solid var(--border-secondary);
+      letter-spacing: 0;
+    }
+
+    .archive-month-body {
+      border: 1px solid var(--border-secondary);
+      border-top: none;
+      padding: 12px 14px;
+    }
+
+    .archive-month-body.collapsed {
+      display: none;
+    }
+
+    .archive-project-group {
+      margin-bottom: 12px;
+    }
+
+    .archive-project-header {
+      font-size: 9px;
+      font-weight: bold;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      padding: 4px 0;
+      border-bottom: 1px dashed var(--border-secondary);
+      margin-bottom: 6px;
+      letter-spacing: 1px;
+    }
+
+    .archive-stream-group {
+      margin-left: 10px;
+      margin-bottom: 8px;
+    }
+
+    .archive-stream-header {
+      font-size: 8px;
+      color: var(--text-muted);
+      padding: 2px 0 4px 0;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .archive-task-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 8px;
+      margin-left: 10px;
+      margin-bottom: 2px;
+      font-size: 9px;
+      border-left: 2px solid var(--color-done);
+    }
+
+    .archive-task-row:hover {
+      background: var(--bg-card);
+    }
+
+    .archive-task-title {
+      flex: 1;
+      color: var(--text-primary);
+      text-decoration: line-through;
+      text-decoration-color: var(--text-muted);
+    }
+
+    .archive-task-dates {
+      color: var(--text-muted);
+      white-space: nowrap;
+      font-size: 8px;
+    }
+
+    .archive-task-duration {
+      color: var(--text-secondary);
+      white-space: nowrap;
+      font-size: 8px;
+      min-width: 32px;
+      text-align: right;
+    }
+
+    .archive-restore-btn {
+      background: none;
+      border: 1px solid var(--border-secondary);
+      color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+      font-size: 8px;
+      cursor: pointer;
+      padding: 1px 5px;
+      opacity: 0;
+      white-space: nowrap;
+    }
+
+    .archive-task-row:hover .archive-restore-btn {
+      opacity: 1;
+    }
+
+    .archive-restore-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--text-primary);
+    }
+
+    .archive-month-sub-header {
+      font-size: 8px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 2px 0 4px 8px;
+      margin-bottom: 2px;
+    }
+
+    .task-archive-btn {
+      background: none;
+      border: 1px solid var(--border-secondary);
+      color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+      font-size: 8px;
+      cursor: pointer;
+      padding: 2px 6px;
+      white-space: nowrap;
+    }
+
+    .task-archive-btn:hover {
+      border-color: var(--color-inprog);
+      color: var(--color-inprog);
+    }
+
+    .archive-empty {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 10px;
+      padding: 48px 20px;
+      letter-spacing: 2px;
+      line-height: 2.2;
+    }
   </style>
 </head>
 <body>
@@ -2254,6 +2468,7 @@
         <button class="nav-tab" data-tab="timeline">PROJECTS</button>
         <button class="nav-tab" data-tab="calendar">CALENDAR</button>
         <button class="nav-tab" data-tab="summary">SUMMARY</button>
+        <button class="nav-tab" data-tab="archive">ARCHIVE</button>
         <button class="nav-tab" data-tab="settings">SETTINGS</button>
       </div>
 
@@ -2558,6 +2773,7 @@
             <div class="modal-actions">
               <button id="modalFocusBtn">💚 FOCUS</button>
               <button id="modalFlagBtn">🚩 FLAG</button>
+              <button id="modalArchiveBtn" style="display:none;">📦 ARCHIVE</button>
               <button id="modalDeleteBtn">DELETE</button>
               <button id="modalSaveBtn" class="primary">SAVE</button>
             </div>
@@ -2726,6 +2942,18 @@
             <div class="shortcuts-title">⌨ KEYBOARD SHORTCUTS</div>
             <div class="shortcut-item">cmd/ctrl+e → Copy for review</div>
           </div>
+        </div>
+
+        <!-- ARCHIVE TAB -->
+        <div id="archive-view" class="tab-content" style="display: none;">
+          <div class="archive-top-bar">
+            <div class="archive-view-controls">
+              <button class="archive-view-btn active" data-archive-view="by-time">📅 BY TIME</button>
+              <button class="archive-view-btn" data-archive-view="by-project">📁 BY PROJECT</button>
+            </div>
+            <div class="archive-count-total" id="archive-count-total"></div>
+          </div>
+          <div id="archive-container"></div>
         </div>
 
         <!-- SETTINGS TAB -->
@@ -3394,7 +3622,7 @@
         }
 
         const activeTasks = app.tasks.filter(t => t.status !== 'DONE').sort((a, b) => a.order - b.order);
-        const doneTasks = app.tasks.filter(t => t.status === 'DONE');
+        const doneTasks = app.tasks.filter(t => t.status === 'DONE' && !t.archived);
 
         // Group active tasks by project
         const tasksByProject = {};
@@ -3542,6 +3770,7 @@
                 </select>
                 <div class="task-date">${formatDate(task.dueDate)}</div>
                 ${renderNotesControl(task)}
+                <button class="task-archive-btn" data-task-id="${task.id}">📦 archive</button>
                 <button class="task-button" data-task-id="${task.id}" data-action="toggle">Start working</button>
                 <button class="task-button" data-task-id="${task.id}" data-action="flag">🚩</button>
                 <button class="task-delete" data-task-id="${task.id}" data-action="delete">×</button>
@@ -3722,7 +3951,7 @@
       // Filter parent tasks by selected project (exclude subtasks from top level)
       statuses.forEach(status => {
         const allTasks = app.tasks
-          .filter(t => t.status === status && t.project === app.selectedKanbanProject)
+          .filter(t => t.status === status && t.project === app.selectedKanbanProject && !t.archived)
           .sort((a, b) => a.order - b.order);
 
         // Separate parent tasks and subtasks
@@ -3957,6 +4186,17 @@
       document.getElementById('modalFocusBtn').onclick = () => toggleFocusTag(taskId, true);
       document.getElementById('modalDeleteBtn').onclick = () => deleteTaskFromModal(taskId);
       document.getElementById('modalClose').onclick = () => closeTaskModal();
+
+      const archiveBtn = document.getElementById('modalArchiveBtn');
+      archiveBtn.style.display = task.status === 'DONE' ? '' : 'none';
+      archiveBtn.onclick = () => {
+        task.archived = true;
+        task.archivedAt = new Date().toISOString();
+        saveToStorage();
+        closeTaskModal();
+        renderTasks();
+        renderKanbanView();
+      };
 
       document.getElementById('taskModal').classList.add('active');
     }
@@ -4362,7 +4602,8 @@
               e.target.closest('.drag-handle') ||
               e.target.closest('.task-status') ||
               e.target.closest('.task-notes-control') ||
-              e.target.closest('.btn-add-subtask')) {
+              e.target.closest('.btn-add-subtask') ||
+              e.target.closest('.task-archive-btn')) {
             return;
           }
           const taskId = card.getAttribute('data-task-id');
@@ -4528,6 +4769,21 @@
           }
           renderTasks();
           renderSummary();
+        });
+      });
+
+      // Archive button (on DONE tasks)
+      document.querySelectorAll('.task-archive-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const taskId = e.target.getAttribute('data-task-id');
+          const task = app.tasks.find(t => t.id === taskId);
+          if (task) {
+            task.archived = true;
+            task.archivedAt = new Date().toISOString();
+            saveToStorage();
+            renderTasks();
+          }
         });
       });
 
@@ -5446,6 +5702,229 @@
       });
     }
 
+    // ===== ARCHIVE TAB =====
+
+    function renderArchiveTaskRow(task) {
+      const created = task.createdAt ? formatDateTime(task.createdAt) : '—';
+      const completed = task.completedAt ? formatDateTime(task.completedAt) : '—';
+      let duration = '';
+      if (task.createdAt && task.completedAt) {
+        const ms = new Date(task.completedAt) - new Date(task.createdAt);
+        const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        if (days > 0) duration = `${days}d`;
+        else if (hours > 0) duration = `${hours}h`;
+        else duration = '<1h';
+      }
+      return `
+        <div class="archive-task-row">
+          <span class="archive-task-title">✓ ${task.title}</span>
+          <span class="archive-task-dates">${created} → ${completed}</span>
+          ${duration ? `<span class="archive-task-duration">[${duration}]</span>` : '<span class="archive-task-duration"></span>'}
+          <button class="archive-restore-btn" data-task-id="${task.id}">↩ restore</button>
+        </div>`;
+    }
+
+    function renderArchiveProjectStreams(byProject) {
+      let html = '';
+      Object.keys(byProject).sort().forEach(proj => {
+        const streams = byProject[proj];
+        let streamHtml = '';
+        Object.keys(streams).sort().forEach(stream => {
+          const tasks = streams[stream].slice().sort((a, b) => (a.completedAt || '') > (b.completedAt || '') ? 1 : -1);
+          streamHtml += `
+            <div class="archive-stream-group">
+              <div class="archive-stream-header">└─ ${stream === '—' ? '(no stream)' : stream}</div>
+              ${tasks.map(t => renderArchiveTaskRow(t)).join('')}
+            </div>`;
+        });
+        html += `
+          <div class="archive-project-group">
+            <div class="archive-project-header">▸ ${proj}</div>
+            ${streamHtml}
+          </div>`;
+      });
+      return html;
+    }
+
+    function getArchiveMonthKey(task) {
+      const d = task.completedAt ? new Date(task.completedAt) : new Date(task.archivedAt || Date.now());
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    function formatMonthKey(key) {
+      const [year, month] = key.split('-');
+      const d = new Date(parseInt(year), parseInt(month) - 1, 1);
+      return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+    }
+
+    const ARCHIVE_TAB_COLORS = [
+      'var(--color-inprog)',
+      'var(--color-pending)',
+      '#a6b08a',
+      'var(--color-flagged)',
+      '#7ab8e4',
+      '#e4a6b0'
+    ];
+
+    function renderArchiveByTime(tasks, container) {
+      const byMonth = {};
+      tasks.forEach(task => {
+        const key = getArchiveMonthKey(task);
+        if (!byMonth[key]) byMonth[key] = [];
+        byMonth[key].push(task);
+      });
+
+      const sortedMonths = Object.keys(byMonth).sort().reverse();
+      let html = '';
+      sortedMonths.forEach((key, idx) => {
+        const monthTasks = byMonth[key];
+        const color = ARCHIVE_TAB_COLORS[idx % ARCHIVE_TAB_COLORS.length];
+        const byProject = {};
+        monthTasks.forEach(task => {
+          const proj = task.project || 'No Project';
+          const stream = task.stage || '—';
+          if (!byProject[proj]) byProject[proj] = {};
+          if (!byProject[proj][stream]) byProject[proj][stream] = [];
+          byProject[proj][stream].push(task);
+        });
+        html += `
+          <div class="archive-month-folder">
+            <div class="archive-month-tab" style="border-top-color: ${color};" data-month-toggle="${key}">
+              <span class="archive-month-toggle">▼</span>
+              <span>📁 ${formatMonthKey(key)}</span>
+              <span class="archive-month-count">${monthTasks.length} task${monthTasks.length !== 1 ? 's' : ''}</span>
+            </div>
+            <div class="archive-month-body" id="archive-month-${key}">
+              ${renderArchiveProjectStreams(byProject)}
+            </div>
+          </div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    function renderArchiveByProject(tasks, container) {
+      const byProject = {};
+      tasks.forEach(task => {
+        const proj = task.project || 'No Project';
+        const stream = task.stage || '—';
+        const key = getArchiveMonthKey(task);
+        if (!byProject[proj]) byProject[proj] = {};
+        if (!byProject[proj][stream]) byProject[proj][stream] = {};
+        if (!byProject[proj][stream][key]) byProject[proj][stream][key] = [];
+        byProject[proj][stream][key].push(task);
+      });
+
+      const projects = Object.keys(byProject).sort();
+      let html = '';
+      projects.forEach((proj, idx) => {
+        const color = ARCHIVE_TAB_COLORS[idx % ARCHIVE_TAB_COLORS.length];
+        const streams = byProject[proj];
+        let totalCount = 0;
+        Object.values(streams).forEach(s => Object.values(s).forEach(arr => totalCount += arr.length));
+        let streamsHtml = '';
+        Object.keys(streams).sort().forEach(stream => {
+          const months = streams[stream];
+          let monthsHtml = '';
+          Object.keys(months).sort().reverse().forEach(monthKey => {
+            const monthTasks = months[monthKey].slice().sort((a, b) => (a.completedAt || '') > (b.completedAt || '') ? 1 : -1);
+            monthsHtml += `
+              <div style="margin-bottom: 8px;">
+                <div class="archive-month-sub-header">📅 ${formatMonthKey(monthKey)} · ${monthTasks.length} task${monthTasks.length !== 1 ? 's' : ''}</div>
+                ${monthTasks.map(t => renderArchiveTaskRow(t)).join('')}
+              </div>`;
+          });
+          streamsHtml += `
+            <div class="archive-stream-group">
+              <div class="archive-stream-header">└─ ${stream === '—' ? '(no stream)' : stream}</div>
+              ${monthsHtml}
+            </div>`;
+        });
+        html += `
+          <div class="archive-month-folder">
+            <div class="archive-month-tab" style="border-top-color: ${color};" data-month-toggle="proj-${idx}">
+              <span class="archive-month-toggle">▼</span>
+              <span>📁 ${proj}</span>
+              <span class="archive-month-count">${totalCount} task${totalCount !== 1 ? 's' : ''}</span>
+            </div>
+            <div class="archive-month-body" id="archive-month-proj-${idx}">
+              ${streamsHtml}
+            </div>
+          </div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    function renderArchive() {
+      const archivedTasks = app.tasks.filter(t => t.archived && !t.parentTaskId);
+      const container = document.getElementById('archive-container');
+      const countEl = document.getElementById('archive-count-total');
+      if (!container || !countEl) return;
+
+      countEl.textContent = `${archivedTasks.length} archived task${archivedTasks.length !== 1 ? 's' : ''}`;
+
+      if (archivedTasks.length === 0) {
+        container.innerHTML = `
+          <div class="archive-empty">
+            * &nbsp;·&nbsp; ✦ &nbsp;·&nbsp; *<br><br>
+            NO ARCHIVED TASKS YET<br><br>
+            mark a task DONE, then click [📦 archive]<br>
+            to file it here<br><br>
+            * &nbsp;·&nbsp; ✦ &nbsp;·&nbsp; *
+          </div>`;
+        return;
+      }
+
+      const viewMode = app.archiveViewMode || 'by-time';
+      document.querySelectorAll('.archive-view-btn').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-archive-view') === viewMode);
+      });
+      if (viewMode === 'by-time') {
+        renderArchiveByTime(archivedTasks, container);
+      } else {
+        renderArchiveByProject(archivedTasks, container);
+      }
+
+      // Folder tab collapse/expand
+      document.querySelectorAll('[data-month-toggle]').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const key = tab.getAttribute('data-month-toggle');
+          const body = document.getElementById(`archive-month-${key}`);
+          const toggle = tab.querySelector('.archive-month-toggle');
+          if (body) {
+            body.classList.toggle('collapsed');
+            toggle.textContent = body.classList.contains('collapsed') ? '▶' : '▼';
+          }
+        });
+      });
+
+      // Restore button
+      document.querySelectorAll('.archive-restore-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const taskId = btn.getAttribute('data-task-id');
+          const task = app.tasks.find(t => t.id === taskId);
+          if (task) {
+            task.archived = false;
+            task.archivedAt = null;
+            saveToStorage();
+            renderArchive();
+            renderTasks();
+          }
+        });
+      });
+
+      // View mode toggle
+      document.querySelectorAll('.archive-view-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          app.archiveViewMode = btn.getAttribute('data-archive-view');
+          document.querySelectorAll('.archive-view-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderArchive();
+        });
+      });
+    }
+
     function renderSettings() {
       const projectsList = document.getElementById('settings-projects-list');
       const statusesList = document.getElementById('settings-statuses-list');
@@ -5709,6 +6188,7 @@
         'timeline': '📋 PROJECTS',
         'calendar': '📅 CALENDAR',
         'summary': '📊 SUMMARY',
+        'archive': '🗂 ARCHIVE',
         'settings': '⚙ SETTINGS'
       };
       document.getElementById('header-title').textContent = titles[tabName] || 'TASK DASHBOARD';
@@ -5724,6 +6204,7 @@
       if (tabName === 'timeline') renderTimeline();
       if (tabName === 'calendar') renderWeeklyMeetingView();
       if (tabName === 'summary') renderSummary();
+      if (tabName === 'archive') renderArchive();
       if (tabName === 'settings') renderSettings();
     }
 
