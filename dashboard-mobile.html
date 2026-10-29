@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Tasks · Mobile</title>
+  <style>
+    :root {
+      --bg:       #2a2a2a;
+      --bg-card:  #3d3d3d;
+      --bg-input: #242424;
+      --text:     #a6b08a;
+      --text-2:   #7a8a6a;
+      --text-3:   #5a6a4a;
+      --border:   #5a6a4a;
+      --accent:   #a6b08a;
+      --inprog:   #c9b8e4;
+      --pending:  #e4c5d8;
+      --flagged:  #e8ddb8;
+      --done:     #5a6a4a;
+      --nav-h:    60px;
+      --safe-b:   env(safe-area-inset-bottom, 0px);
+    }
+    body.light {
+      --bg:       #f5f5f5;
+      --bg-card:  #ffffff;
+      --bg-input: #eeeeee;
+      --text:     #5a6a4a;
+      --text-2:   #666666;
+      --text-3:   #999999;
+      --border:   #d0d0d0;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 12px;
+      height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .header-title  { font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .header-time   { font-size: 9px; color: var(--text-2); margin-top: 2px; }
+    .theme-btn     { background: none; border: none; color: var(--text); font-size: 18px; cursor: pointer; padding: 6px; }
+
+    /* ── CONTENT ── */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: calc(var(--nav-h) + var(--safe-b) + 68px);
+    }
+    .tab-view          { display: none; padding: 12px; }
+    .tab-view.active   { display: block; }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: calc(var(--nav-h) + var(--safe-b));
+      padding-bottom: var(--safe-b);
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 100;
+    }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: none; border: none;
+      color: var(--text-3);
+      font-family: 'Courier New', monospace;
+      font-size: 8px; text-transform: uppercase;
+      cursor: pointer; gap: 3px; padding: 6px 0;
+    }
+    .nav-btn .icon   { font-size: 17px; }
+    .nav-btn.active  { color: var(--text); border-top: 2px solid var(--text); }
+
+    /* ── FAB ── */
+    .fab {
+      position: fixed;
+      bottom: calc(var(--nav-h) + var(--safe-b) + 10px);
+      right: 16px;
+      width: 46px; height: 46px;
+      background: var(--accent); color: var(--bg);
+      border: none; border-radius: 2px;
+      font-size: 26px; font-weight: bold;
+      cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      z-index: 99;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+    }
+    .fab:active { opacity: 0.8; }
+
+    /* ── TASK CARDS ── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      padding: 11px 13px;
+      margin-bottom: 7px;
+      cursor: pointer;
+      min-height: 56px;
+    }
+    .card:active          { opacity: 0.7; }
+    .card.inprog          { border-left-color: var(--inprog); }
+    .card.pending         { border-left-color: var(--pending); }
+    .card.done            { border-left-color: var(--done); opacity: 0.65; }
+    .card.flagged         { background: rgba(232,221,184,0.07); }
+    .card-title           { font-size: 12px; font-weight: bold; margin-bottom: 5px; }
+    .card.done .card-title { text-decoration: line-through; color: var(--text-3); }
+    .card-meta            { font-size: 10px; color: var(--text-2); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .status-chip          { padding: 1px 5px; font-size: 8px; text-transform: uppercase; border: 1px solid; }
+    .status-chip.todo     { color: var(--text-2); border-color: var(--text-3); }
+    .status-chip.inprog   { color: var(--inprog); border-color: var(--inprog); }
+    .status-chip.pending  { color: var(--pending); border-color: var(--pending); }
+    .status-chip.done     { color: var(--done); border-color: var(--done); }
+
+    /* ── SECTION HEADERS ── */
+    .section-header {
+      font-size: 10px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--text-2);
+      padding: 8px 0 6px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 8px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .section-count {
+      background: var(--bg-input); padding: 1px 6px;
+      font-size: 9px; border: 1px solid var(--border);
+    }
+
+    /* ── PROJECT GROUP ── */
+    .project-group { margin-bottom: 14px; }
+    .project-header {
+      font-size: 11px; font-weight: bold; text-transform: uppercase;
+      color: var(--text); padding: 7px 0 5px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 7px;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* ── FILTER CHIPS ── */
+    .filter-row {
+      display: flex; gap: 5px; margin-bottom: 12px;
+      overflow-x: auto; padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .filter-chip {
+      padding: 5px 10px; background: none;
+      border: 1px solid var(--border); color: var(--text-2);
+      font-family: 'Courier New', monospace;
+      font-size: 9px; text-transform: uppercase;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    }
+    .filter-chip.active { background: var(--bg-card); color: var(--text); border-color: var(--text); }
+
+    /* ── CALENDAR ── */
+    .day-block     { margin-bottom: 14px; }
+    .day-header {
+      font-size: 11px; font-weight: bold; text-transform: uppercase;
+      color: var(--text); padding: 8px 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-bottom: 2px solid var(--accent);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .day-header.is-today  { border-bottom-color: var(--inprog); }
+    .day-add-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--text-2); font-family: 'Courier New', monospace;
+      font-size: 10px; cursor: pointer; padding: 3px 8px;
+    }
+    .meeting-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      padding: 9px 12px; margin-bottom: 5px;
+      cursor: pointer; margin-left: 8px;
+    }
+    .meeting-card.priority { border-left-color: var(--inprog); }
+    .meeting-card:active   { opacity: 0.7; }
+    .no-meetings { font-size: 10px; color: var(--text-3); padding: 8px 10px 4px 18px; }
+
+    /* ── SUMMARY ── */
+    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+    .metric-box   { background: var(--bg-card); border: 1px solid var(--border); padding: 12px; text-align: center; }
+    .metric-val   { font-size: 24px; font-weight: bold; }
+    .metric-lbl   { font-size: 9px; color: var(--text-2); text-transform: uppercase; margin-top: 2px; }
+    .bar-row      { margin-bottom: 10px; }
+    .bar-label    { font-size: 10px; color: var(--text-2); margin-bottom: 3px; display: flex; justify-content: space-between; }
+    .bar-track    { height: 6px; background: var(--bg-input); border: 1px solid var(--border); }
+    .bar-fill     { height: 100%; background: var(--accent); }
+
+    /* ── MORE ── */
+    .more-section { margin-bottom: 20px; }
+    .more-title   { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: var(--text-2); margin-bottom: 10px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+    .more-btn {
+      display: block; width: 100%; padding: 13px 14px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      color: var(--text); font-family: 'Courier New', monospace;
+      font-size: 11px; text-transform: uppercase;
+      cursor: pointer; text-align: left; margin-bottom: 6px; letter-spacing: 1px;
+    }
+    .more-btn:active { opacity: 0.7; }
+
+    /* ── ARCHIVE (in MORE) ── */
+    .arch-month-header {
+      font-size: 10px; font-weight: bold; text-transform: uppercase;
+      padding: 8px 10px; background: var(--bg-card);
+      border-top: 2px solid var(--inprog);
+      border-left: 1px solid var(--border); border-right: 1px solid var(--border);
+      display: flex; justify-content: space-between; letter-spacing: 1px;
+      margin-top: 10px;
+    }
+    .arch-task {
+      background: var(--bg-card); border: 1px solid var(--border); border-top: none;
+      padding: 8px 12px; border-left: 3px solid var(--done);
+    }
+    .arch-task-name  { font-size: 10px; color: var(--text-2); text-decoration: line-through; }
+    .arch-task-meta  { font-size: 9px; color: var(--text-3); margin-top: 2px; }
+
+    /* ── MODALS (bottom sheet) ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 200; display: none; align-items: flex-end;
+    }
+    .overlay.active { display: flex; }
+    .sheet {
+      background: var(--bg-card); border-top: 2px solid var(--accent);
+      width: 100%; max-height: 92dvh; overflow-y: auto;
+      padding-bottom: calc(16px + var(--safe-b));
+      animation: up .18s ease;
+    }
+    @keyframes up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .sheet-handle-row { display: flex; justify-content: center; padding: 10px 0 4px; }
+    .sheet-handle     { width: 34px; height: 4px; background: var(--border); border-radius: 2px; }
+    .sheet-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 16px 12px; border-bottom: 1px solid var(--border);
+    }
+    .sheet-title  { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .close-btn    { background: none; border: none; color: var(--text-2); font-size: 20px; cursor: pointer; padding: 4px 8px; }
+    .sheet-body   { padding: 14px 16px; }
+
+    /* ── FIELDS ── */
+    .field-row   { margin-bottom: 13px; }
+    .field-label { font-size: 9px; color: var(--text-2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .field-input {
+      width: 100%; padding: 10px 11px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      color: var(--text); font-family: 'Courier New', monospace; font-size: 12px;
+    }
+    .field-input:focus        { outline: none; border-color: var(--accent); }
+    select.field-input        { appearance: none; -webkit-appearance: none; }
+    textarea.field-input      { resize: vertical; min-height: 64px; }
+
+    /* ── STATUS BUTTONS ── */
+    .status-row { display: flex; gap: 5px; flex-wrap: wrap; }
+    .status-btn {
+      flex: 1; min-width: 60px; padding: 8px 6px;
+      background: none; border: 1px solid var(--border);
+      color: var(--text-3); font-family: 'Courier New', monospace;
+      font-size: 8px; text-transform: uppercase; cursor: pointer;
+    }
+    .status-btn.sel-todo    { background: rgba(106,122,90,0.18);  color: var(--text);    border-color: var(--text-2); }
+    .status-btn.sel-inprog  { background: rgba(201,184,228,0.18); color: var(--inprog);  border-color: var(--inprog); }
+    .status-btn.sel-pending { background: rgba(228,197,216,0.18); color: var(--pending); border-color: var(--pending); }
+    .status-btn.sel-done    { background: rgba(90,106,74,0.15);   color: var(--done);    border-color: var(--done); }
+
+    /* ── MODAL ACTION ROWS ── */
+    .act-row { display: flex; gap: 7px; margin-top: 6px; flex-wrap: wrap; }
+    .act-btn {
+      padding: 10px 13px; background: none;
+      border: 1px solid var(--border); color: var(--text-2);
+      font-family: 'Courier New', monospace;
+      font-size: 10px; text-transform: uppercase; cursor: pointer;
+    }
+    .act-btn:active        { opacity: 0.7; }
+    .act-btn.primary       { flex: 1; background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: bold; }
+    .act-btn.danger        { color: #e47a7a; border-color: #e47a7a; }
+
+    /* ── QUICK-ADD SHEET ── */
+    .qa-sheet {
+      background: var(--bg-card); border-top: 2px solid var(--accent);
+      width: 100%; padding: 16px 16px calc(16px + var(--safe-b));
+      animation: up .18s ease;
+    }
+    .qa-title { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .qa-row   { display: flex; gap: 8px; margin-bottom: 12px; }
+
+    /* ── EMPTY STATE ── */
+    .empty { text-align: center; color: var(--text-3); padding: 36px 20px; font-size: 11px; letter-spacing: 2px; line-height: 2.2; }
+
+    #import-input { display: none; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="header-title" id="header-title">💚 TODAY</div>
+      <div class="header-time"  id="header-time"></div>
+    </div>
+    <button class="theme-btn" id="theme-btn">🌙</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- TODAY -->
+    <div class="tab-view active" id="view-today">
+      <div id="today-content"></div>
+    </div>
+
+    <!-- TASKS -->
+    <div class="tab-view" id="view-tasks">
+      <div class="filter-row">
+        <button class="filter-chip active" data-filter="active">ACTIVE</button>
+        <button class="filter-chip" data-filter="todo">TO DO</button>
+        <button class="filter-chip" data-filter="inprog">IN PROG</button>
+        <button class="filter-chip" data-filter="pending">PENDING</button>
+        <button class="filter-chip" data-filter="done">DONE</button>
+      </div>
+      <div id="tasks-content"></div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="tab-view" id="view-calendar">
+      <div id="calendar-content"></div>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="tab-view" id="view-summary">
+      <div id="summary-content"></div>
+    </div>
+
+    <!-- MORE -->
+    <div class="tab-view" id="view-more">
+      <div id="more-content"></div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-tab="today">   <span class="icon">💚</span><span>TODAY</span>   </button>
+    <button class="nav-btn"        data-tab="tasks">   <span class="icon">🕐</span><span>TASKS</span>   </button>
+    <button class="nav-btn"        data-tab="calendar"><span class="icon">📅</span><span>CAL</span>     </button>
+    <button class="nav-btn"        data-tab="summary"> <span class="icon">📊</span><span>STATS</span>   </button>
+    <button class="nav-btn"        data-tab="more">    <span class="icon">⋯</span><span>MORE</span>    </button>
+  </nav>
+
+  <!-- FAB -->
+  <button class="fab" id="fab">+</button>
+
+  <!-- TASK MODAL -->
+  <div class="overlay" id="task-modal">
+    <div class="sheet">
+      <div class="sheet-handle-row"><div class="sheet-handle"></div></div>
+      <div class="sheet-header">
+        <div class="sheet-title">TASK</div>
+        <button class="close-btn" id="task-close">×</button>
+      </div>
+      <div class="sheet-body">
+        <div class="field-row">
+          <div class="field-label">Title</div>
+          <input type="text" class="field-input" id="t-title" placeholder="Task title...">
+        </div>
+        <div class="field-row">
+          <div class="field-label">Status</div>
+          <div class="status-row" id="t-status-row">
+            <button class="status-btn" data-s="TO DO">TO DO</button>
+            <button class="status-btn" data-s="IN PROG">IN PROG</button>
+            <button class="status-btn" data-s="PENDING">PENDING</button>
+            <button class="status-btn" data-s="DONE">DONE</button>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Project</div>
+          <select class="field-input" id="t-project"></select>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Stream</div>
+          <select class="field-input" id="t-stream"></select>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Due Date</div>
+          <input type="date" class="field-input" id="t-date">
+        </div>
+        <div class="field-row">
+          <div class="field-label">Notes</div>
+          <textarea class="field-input" id="t-notes" rows="3" placeholder="Notes..."></textarea>
+        </div>
+        <div class="act-row">
+          <button class="act-btn" id="t-flag">🚩 FLAG</button>
+          <button class="act-btn" id="t-archive" style="display:none;">📦 ARCHIVE</button>
+          <button class="act-btn danger" id="t-delete">DELETE</button>
+        </div>
+        <div class="act-row" style="margin-top: 8px;">
+          <button class="act-btn primary" id="t-save">SAVE CHANGES</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEETING MODAL -->
+  <div class="overlay" id="meeting-modal">
+    <div class="sheet">
+      <div class="sheet-handle-row"><div class="sheet-handle"></div></div>
+      <div class="sheet-header">
+        <div class="sheet-title">MEETING</div>
+        <button class="close-btn" id="m-close">×</button>
+      </div>
+      <div class="sheet-body">
+        <div class="field-row">
+          <div class="field-label">Title</div>
+          <input type="text" class="field-input" id="m-title" placeholder="Meeting title...">
+        </div>
+        <div class="field-row" style="display:flex;gap:8px;">
+          <div style="flex:1;">
+            <div class="field-label">Date</div>
+            <input type="date" class="field-input" id="m-date">
+          </div>
+          <div style="flex:1;">
+            <div class="field-label">Time</div>
+            <input type="time" class="field-input" id="m-time">
+          </div>
+        </div>
+        <div class="field-row" style="display:flex;gap:8px;">
+          <div style="flex:1;">
+            <div class="field-label">Duration (min)</div>
+            <input type="number" class="field-input" id="m-duration" placeholder="60" min="5">
+          </div>
+          <div style="flex:1;">
+            <div class="field-label">Project</div>
+            <select class="field-input" id="m-project"></select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-label">Notes</div>
+          <textarea class="field-input" id="m-notes" rows="2" placeholder="Notes..."></textarea>
+        </div>
+        <div class="act-row">
+          <button class="act-btn" id="m-flag">★ PRIORITY</button>
+          <button class="act-btn danger" id="m-delete">DELETE</button>
+        </div>
+        <div class="act-row" style="margin-top: 8px;">
+          <button class="act-btn primary" id="m-save">SAVE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK-ADD OVERLAY -->
+  <div class="overlay" id="qa-overlay">
+    <div class="qa-sheet">
+      <div class="qa-title">
+        <span>+ QUICK ADD TASK</span>
+        <button class="close-btn" id="qa-close">×</button>
+      </div>
+      <div class="field-row">
+        <input type="text" class="field-input" id="qa-title-input" placeholder="Task title...">
+      </div>
+      <div class="qa-row">
+        <select class="field-input" id="qa-project" style="flex:1;"></select>
+        <input type="date" class="field-input" id="qa-date" style="flex:1;">
+      </div>
+      <button class="act-btn primary" id="qa-add" style="width:100%;padding:12px;">ADD TASK</button>
+    </div>
+  </div>
+
+  <input type="file" id="import-input" accept=".json">
+
+<script>
+  // ── STATE ──────────────────────────────────────────────────────────────────
+  const app = {
+    tasks:       [],
+    meetings:    [],
+    projects:    [],
+    settings:    { userName: 'Amanda', statuses: [], theme: 'dark' },
+    currentTab:  'today',
+    openTaskId:  null,
+    openMtgId:   null,
+    taskFilter:  'active',
+  };
+
+  // ── STORAGE (same keys as desktop) ─────────────────────────────────────────
+  function save() {
+    localStorage.setItem('tasks',    JSON.stringify(app.tasks));
+    localStorage.setItem('meetings', JSON.stringify(app.meetings));
+    localStorage.setItem('projects', JSON.stringify(app.projects));
+    localStorage.setItem('settings', JSON.stringify(app.settings));
+  }
+
+  function load() {
+    app.tasks    = JSON.parse(localStorage.getItem('tasks'))    || [];
+    app.meetings = JSON.parse(localStorage.getItem('meetings')) || [];
+    app.projects = JSON.parse(localStorage.getItem('projects')) || [];
+    app.settings = JSON.parse(localStorage.getItem('settings')) || app.settings;
+    const theme  = localStorage.getItem('theme') || 'dark';
+    if (theme === 'light') document.body.classList.add('light');
+  }
+
+  // ── UTILITIES ──────────────────────────────────────────────────────────────
+  function uuid() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0;
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+  }
+  function todayStr() { return new Date().toISOString().split('T')[0]; }
+  function fmtDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+  }
+  function fmtDateTime(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+      + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+  function sc(status) { return (status || '').toLowerCase().replace(' ',''); }
+
+  // ── TAB SWITCHING ──────────────────────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('view-' + name).classList.add('active');
+    document.querySelector(`[data-tab="${name}"]`).classList.add('active');
+    app.currentTab = name;
+    const titles = { today:'💚 TODAY', tasks:'🕐 TASKS', calendar:'📅 CALENDAR', summary:'📊 STATS', more:'⋯ MORE' };
+    document.getElementById('header-title').textContent = titles[name] || name.toUpperCase();
+    if (name === 'today')    renderToday();
+    if (name === 'tasks')    renderTasks();
+    if (name === 'calendar') renderCalendar();
+    if (name === 'summary')  renderSummary();
+    if (name === 'more')     renderMore();
+  }
+
+  function refresh() {
+    const t = app.currentTab;
+    if (t === 'today')    renderToday();
+    if (t === 'tasks')    renderTasks();
+    if (t === 'calendar') renderCalendar();
+    if (t === 'summary')  renderSummary();
+    if (t === 'more')     renderMore();
+  }
+
+  // ── TODAY VIEW ─────────────────────────────────────────────────────────────
+  function renderToday() {
+    const today = todayStr();
+    const focus = app.tasks.filter(t => t.focusTagged && t.status !== 'DONE' && !t.archived && !t.parentTaskId);
+    const due   = app.tasks.filter(t =>
+      !t.archived && !t.parentTaskId && t.status !== 'DONE' &&
+      (t.dueDate === today || t.status === 'IN PROG')
+    );
+    const uniq  = [...new Map(due.map(t => [t.id, t])).values()];
+    const mtgs  = app.meetings.filter(m => m.date === today).sort((a,b) => a.time.localeCompare(b.time));
+
+    let h = '';
+    if (focus.length) {
+      h += `<div class="section-header"><span>💚 FOCUS</span><span class="section-count">${focus.length}</span></div>`;
+      focus.forEach(t => { h += taskCard(t); });
+      h += '<div style="margin-top:14px;"></div>';
+    }
+    h += `<div class="section-header"><span>DUE TODAY</span><span class="section-count">${uniq.length}</span></div>`;
+    h += uniq.length ? uniq.map(taskCard).join('') : `<div class="empty">✦<br>nothing due today</div>`;
+    h += '<div style="margin-top:14px;"></div>';
+    h += `<div class="section-header"><span>📅 MEETINGS</span><span class="section-count">${mtgs.length}</span></div>`;
+    h += mtgs.length ? mtgs.map(meetingCard).join('') : `<div class="empty">✦<br>no meetings today</div>`;
+
+    const el = document.getElementById('today-content');
+    el.innerHTML = h;
+    bindCards(el);
+  }
+
+  // ── TASKS VIEW ─────────────────────────────────────────────────────────────
+  function renderTasks() {
+    const f = app.taskFilter;
+    let tasks = app.tasks.filter(t => !t.archived && !t.parentTaskId);
+    if      (f === 'active')  tasks = tasks.filter(t => t.status !== 'DONE');
+    else if (f === 'todo')    tasks = tasks.filter(t => t.status === 'TO DO');
+    else if (f === 'inprog')  tasks = tasks.filter(t => t.status === 'IN PROG');
+    else if (f === 'pending') tasks = tasks.filter(t => t.status === 'PENDING');
+    else if (f === 'done')    tasks = tasks.filter(t => t.status === 'DONE');
+
+    const byProj = {};
+    tasks.forEach(t => {
+      if (!byProj[t.project]) byProj[t.project] = [];
+      byProj[t.project].push(t);
+    });
+
+    let h = '';
+    if (!tasks.length) {
+      h = `<div class="empty">✦<br>no tasks</div>`;
+    } else {
+      Object.keys(byProj).sort().forEach(proj => {
+        h += `<div class="project-group">
+          <div class="project-header">▸ ${proj} <span class="section-count">${byProj[proj].length}</span></div>
+          ${byProj[proj].map(taskCard).join('')}
+        </div>`;
+      });
+    }
+
+    const el = document.getElementById('tasks-content');
+    el.innerHTML = h;
+    bindCards(el);
+  }
+
+  // ── CALENDAR VIEW ──────────────────────────────────────────────────────────
+  function renderCalendar() {
+    let h = '';
+    for (let i = 0; i < 7; i++) {
+      const d   = new Date(); d.setDate(d.getDate() + i);
+      const ds  = d.toISOString().split('T')[0];
+      const day = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+      const num = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      const mtgs = app.meetings.filter(m => m.date === ds).sort((a,b) => a.time.localeCompare(b.time));
+      h += `<div class="day-block">
+        <div class="day-header ${i === 0 ? 'is-today' : ''}">
+          <span>${day} ${num}${i === 0 ? ' · TODAY' : ''}</span>
+          <button class="day-add-btn" data-date="${ds}">+ ADD</button>
+        </div>
+        ${mtgs.length ? mtgs.map(meetingCard).join('') : `<div class="no-meetings">(no meetings)</div>`}
+      </div>`;
+    }
+    const el = document.getElementById('calendar-content');
+    el.innerHTML = h;
+    bindCards(el);
+    el.querySelectorAll('.day-add-btn').forEach(btn => {
+      btn.addEventListener('click', e => { e.stopPropagation(); openMtgModal(null, btn.dataset.date); });
+    });
+  }
+
+  // ── SUMMARY VIEW ───────────────────────────────────────────────────────────
+  function renderSummary() {
+    const active = app.tasks.filter(t => !t.archived && !t.parentTaskId);
+    const done   = active.filter(t => t.status === 'DONE').length;
+    const total  = active.length;
+    const pct    = total ? Math.round(done / total * 100) : 0;
+    const inprog = active.filter(t => t.status === 'IN PROG').length;
+    const today  = todayStr();
+    const over   = active.filter(t => t.status !== 'DONE' && t.dueDate && t.dueDate < today).length;
+
+    let h = `<div class="metrics-grid">
+      <div class="metric-box"><div class="metric-val">${total}</div><div class="metric-lbl">Total Tasks</div></div>
+      <div class="metric-box"><div class="metric-val">${pct}%</div><div class="metric-lbl">Completion</div></div>
+      <div class="metric-box"><div class="metric-val">${inprog}</div><div class="metric-lbl">In Progress</div></div>
+      <div class="metric-box"><div class="metric-val">${over}</div><div class="metric-lbl">Overdue</div></div>
+    </div>
+    <div class="section-header" style="margin-bottom:12px;"><span>BY PROJECT</span></div>`;
+
+    const byProj = {};
+    active.forEach(t => {
+      if (!byProj[t.project]) byProj[t.project] = { total:0, done:0 };
+      byProj[t.project].total++;
+      if (t.status === 'DONE') byProj[t.project].done++;
+    });
+    Object.keys(byProj).sort().forEach(proj => {
+      const p = byProj[proj];
+      const pp = p.total ? Math.round(p.done / p.total * 100) : 0;
+      h += `<div class="bar-row">
+        <div class="bar-label"><span>${proj}</span><span>${p.done}/${p.total} · ${pp}%</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pp}%"></div></div>
+      </div>`;
+    });
+
+    const archCount = app.tasks.filter(t => t.archived && !t.parentTaskId).length;
+    if (archCount) h += `<div style="margin-top:14px;font-size:10px;color:var(--text-3);text-align:center;">${archCount} task${archCount!==1?'s':''} archived</div>`;
+
+    document.getElementById('summary-content').innerHTML = h;
+  }
+
+  // ── MORE VIEW ──────────────────────────────────────────────────────────────
+  function renderMore() {
+    const name     = app.settings.userName || 'Amanda';
+    const archived = app.tasks.filter(t => t.archived && !t.parentTaskId);
+
+    // Archive by month
+    const byMonth = {};
+    archived.forEach(t => {
+      const d   = new Date(t.completedAt || t.archivedAt || Date.now());
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      if (!byMonth[key]) byMonth[key] = [];
+      byMonth[key].push(t);
+    });
+
+    let archHtml = archived.length ? '' : `<div class="empty" style="padding:16px 0;">no archived tasks yet</div>`;
+    Object.keys(byMonth).sort().reverse().forEach(key => {
+      const tasks = byMonth[key];
+      const [y,m] = key.split('-');
+      const label = new Date(parseInt(y), parseInt(m)-1, 1)
+        .toLocaleDateString('en-US', { month:'long', year:'numeric' }).toUpperCase();
+      archHtml += `<div class="arch-month-header"><span>📁 ${label}</span><span>${tasks.length} tasks</span></div>`;
+      tasks.forEach(t => {
+        archHtml += `<div class="arch-task">
+          <div class="arch-task-name">✓ ${t.title}</div>
+          <div class="arch-task-meta">${t.project}${t.stage ? ' › '+t.stage : ''} · ${fmtDateTime(t.completedAt)}</div>
+        </div>`;
+      });
+    });
+
+    document.getElementById('more-content').innerHTML = `
+      <div class="more-section">
+        <div class="more-title">Hello, ${name}</div>
+        <button class="more-btn" id="export-btn">📥 EXPORT DATA (JSON)</button>
+        <button class="more-btn" id="import-btn">📤 IMPORT DATA (JSON)</button>
+      </div>
+      <div class="more-section">
+        <div class="more-title">🗂 ARCHIVE</div>
+        ${archHtml}
+      </div>`;
+
+    document.getElementById('export-btn').addEventListener('click', exportData);
+    document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-input').click());
+  }
+
+  // ── CARD HELPERS ───────────────────────────────────────────────────────────
+  function taskCard(t) {
+    const cls    = sc(t.status);
+    const flagged = t.priority ? ' flagged' : '';
+    const pomo   = t.pomodoroCount > 0 ? ` · 🍅${t.pomodoroCount}` : '';
+    return `<div class="card ${cls}${flagged}" data-tid="${t.id}">
+      <div class="card-title">${t.title}</div>
+      <div class="card-meta">
+        <span class="status-chip ${cls}">${t.status}</span>
+        <span>${t.project}${t.stage ? ' › '+t.stage : ''}</span>
+        ${t.dueDate ? `<span>${fmtDate(t.dueDate)}</span>` : ''}
+        ${t.priority ? '<span>🚩</span>' : ''}${pomo}
+      </div>
+    </div>`;
+  }
+
+  function meetingCard(m) {
+    const pri = m.priority ? ' priority' : '';
+    const star = m.priority ? '★ ' : '';
+    return `<div class="meeting-card${pri}" data-mid="${m.id}">
+      <div class="card-title">${star}${m.title || '(no title)'}</div>
+      <div class="card-meta">
+        ${m.time ? `<span>${m.time}</span>` : ''}
+        ${m.duration ? `<span>${m.duration}min</span>` : ''}
+        ${m.project ? `<span>${m.project}</span>` : ''}
+      </div>
+    </div>`;
+  }
+
+  function bindCards(el) {
+    el.querySelectorAll('[data-tid]').forEach(c => c.addEventListener('click', () => openTaskModal(c.dataset.tid)));
+    el.querySelectorAll('[data-mid]').forEach(c => c.addEventListener('click', () => openMtgModal(c.dataset.mid)));
+  }
+
+  // ── TASK MODAL ─────────────────────────────────────────────────────────────
+  function openTaskModal(id) {
+    const t = app.tasks.find(x => x.id === id);
+    if (!t) return;
+    app.openTaskId = id;
+
+    document.getElementById('t-title').value = t.title;
+    document.getElementById('t-date').value  = t.dueDate || '';
+    document.getElementById('t-notes').value = t.notes || '';
+
+    // Status buttons
+    document.querySelectorAll('.status-btn').forEach(btn => {
+      const s = btn.dataset.s;
+      btn.className = `status-btn${t.status === s ? ` sel-${sc(s)}` : ''}`;
+    });
+
+    // Project
+    const ps = document.getElementById('t-project');
+    ps.innerHTML = app.projects.map(p => `<option value="${p.name}" ${p.name===t.project?'selected':''}>${p.name}</option>`).join('');
+
+    fillStreams(t.project, t.stage);
+
+    // Archive btn
+    document.getElementById('t-archive').style.display = t.status === 'DONE' ? '' : 'none';
+
+    // Flag btn style
+    const fb = document.getElementById('t-flag');
+    fb.style.opacity     = t.priority ? '1' : '0.5';
+    fb.style.color       = t.priority ? 'var(--flagged)' : '';
+    fb.style.borderColor = t.priority ? 'var(--flagged)' : '';
+
+    document.getElementById('task-modal').classList.add('active');
+  }
+
+  function fillStreams(projName, selected) {
+    const sel  = document.getElementById('t-stream');
+    const proj = app.projects.find(p => p.name === projName);
+    sel.innerHTML = '<option value="">-- No Stream --</option>';
+    if (proj && proj.stages) {
+      proj.stages.forEach(s => {
+        sel.innerHTML += `<option value="${s.name}" ${s.name===selected?'selected':''}>${s.name}</option>`;
+      });
+    }
+  }
+
+  function closeTaskModal() {
+    document.getElementById('task-modal').classList.remove('active');
+    app.openTaskId = null;
+  }
+
+  function saveTask() {
+    const t = app.tasks.find(x => x.id === app.openTaskId);
+    if (!t) return;
+
+    const selBtn   = document.querySelector('.status-btn[class*="sel-"]');
+    const newStatus = selBtn ? selBtn.dataset.s : t.status;
+
+    t.title   = document.getElementById('t-title').value;
+    t.project = document.getElementById('t-project').value;
+    t.stage   = document.getElementById('t-stream').value;
+    t.dueDate = document.getElementById('t-date').value;
+    t.notes   = document.getElementById('t-notes').value;
+
+    if (newStatus !== t.status) {
+      if (newStatus === 'IN PROG' && !t.startedAt)   t.startedAt   = new Date().toISOString();
+      if (newStatus === 'DONE'   && !t.completedAt)  t.completedAt = new Date().toISOString();
+      if (newStatus !== 'DONE')                       t.completedAt = null;
+      t.statusHistory = t.statusHistory || [];
+      t.statusHistory.push({ status: newStatus, changedAt: new Date().toISOString() });
+      t.status = newStatus;
+    }
+
+    save(); closeTaskModal(); refresh();
+  }
+
+  function archiveTask() {
+    const t = app.tasks.find(x => x.id === app.openTaskId);
+    if (!t) return;
+    t.archived   = true;
+    t.archivedAt = new Date().toISOString();
+    save(); closeTaskModal(); refresh();
+  }
+
+  function deleteTask() {
+    if (!confirm('Delete this task?')) return;
+    app.tasks = app.tasks.filter(x => x.id !== app.openTaskId);
+    save(); closeTaskModal(); refresh();
+  }
+
+  // ── MEETING MODAL ──────────────────────────────────────────────────────────
+  function openMtgModal(id, date) {
+    app.openMtgId = id;
+    const m = id ? app.meetings.find(x => x.id === id) : null;
+
+    document.getElementById('m-title').value    = m?.title    || '';
+    document.getElementById('m-date').value     = m?.date     || date || todayStr();
+    document.getElementById('m-time').value     = m?.time     || '';
+    document.getElementById('m-duration').value = m?.duration || '';
+    document.getElementById('m-notes').value    = m?.notes    || '';
+
+    const pp = document.getElementById('m-project');
+    pp.innerHTML = '<option value="">-- No Project --</option>' +
+      app.projects.map(p => `<option value="${p.name}" ${p.name===m?.project?'selected':''}>${p.name}</option>`).join('');
+
+    const fb = document.getElementById('m-flag');
+    fb.style.opacity     = m?.priority ? '1' : '0.5';
+    fb.style.color       = m?.priority ? 'var(--inprog)' : '';
+    fb.style.borderColor = m?.priority ? 'var(--inprog)' : '';
+
+    document.getElementById('m-delete').style.display = id ? '' : 'none';
+    document.getElementById('meeting-modal').classList.add('active');
+  }
+
+  function closeMtgModal() {
+    document.getElementById('meeting-modal').classList.remove('active');
+    app.openMtgId = null;
+  }
+
+  function saveMtg() {
+    const data = {
+      title:    document.getElementById('m-title').value,
+      date:     document.getElementById('m-date').value,
+      time:     document.getElementById('m-time').value,
+      duration: parseInt(document.getElementById('m-duration').value) || 0,
+      project:  document.getElementById('m-project').value,
+      notes:    document.getElementById('m-notes').value,
+    };
+
+    if (app.openMtgId) {
+      Object.assign(app.meetings.find(x => x.id === app.openMtgId), data);
+    } else {
+      app.meetings.push({ id: uuid(), priority: false, recurrence: { type:'never' }, ...data });
+    }
+    save(); closeMtgModal(); refresh();
+  }
+
+  function deleteMtg() {
+    if (!confirm('Delete this meeting?')) return;
+    app.meetings = app.meetings.filter(x => x.id !== app.openMtgId);
+    save(); closeMtgModal(); refresh();
+  }
+
+  function toggleMtgFlag() {
+    if (!app.openMtgId) return;
+    const m = app.meetings.find(x => x.id === app.openMtgId);
+    if (!m) return;
+    m.priority = !m.priority;
+    const fb = document.getElementById('m-flag');
+    fb.style.opacity = m.priority ? '1' : '0.5';
+    fb.style.color       = m.priority ? 'var(--inprog)' : '';
+    fb.style.borderColor = m.priority ? 'var(--inprog)' : '';
+  }
+
+  // ── QUICK ADD ──────────────────────────────────────────────────────────────
+  function openQA() {
+    const sel = document.getElementById('qa-project');
+    sel.innerHTML = '<option value="">-- Project --</option>' +
+      app.projects.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+    document.getElementById('qa-date').value = todayStr();
+    document.getElementById('qa-title-input').value = '';
+    document.getElementById('qa-overlay').classList.add('active');
+    setTimeout(() => document.getElementById('qa-title-input').focus(), 150);
+  }
+
+  function closeQA() { document.getElementById('qa-overlay').classList.remove('active'); }
+
+  function addTask() {
+    const title = document.getElementById('qa-title-input').value.trim();
+    if (!title) { document.getElementById('qa-title-input').focus(); return; }
+    const project = document.getElementById('qa-project').value || (app.projects[0]?.name || '');
+    const dueDate = document.getElementById('qa-date').value || todayStr();
+
+    app.tasks.push({
+      id: uuid(), title, project, stage: '',
+      status: 'TO DO', dueDate, notes: '',
+      priority: false, focusTagged: false,
+      recurrence: { type:'never' }, recurrenceParentId: null, parentTaskId: null,
+      createdAt: new Date().toISOString(),
+      startedAt: null, completedAt: null,
+      archived: false, archivedAt: null,
+      pomodoroCount: 0,
+      statusHistory: [{ status:'TO DO', changedAt: new Date().toISOString() }],
+      order: app.tasks.length,
+    });
+    save(); closeQA(); refresh();
+  }
+
+  // ── EXPORT / IMPORT ────────────────────────────────────────────────────────
+  function exportData() {
+    const blob = new Blob([JSON.stringify({ tasks: app.tasks, meetings: app.meetings, projects: app.projects, settings: app.settings, exportedAt: new Date().toISOString(), source: 'mobile' }, null, 2)], { type:'application/json' });
+    const a    = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: `tasks-backup-${todayStr()}.json` });
+    a.click(); URL.revokeObjectURL(a.href);
+  }
+
+  document.getElementById('import-input').addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const d = JSON.parse(ev.target.result);
+        if (d.tasks)    app.tasks    = d.tasks;
+        if (d.meetings) app.meetings = d.meetings;
+        if (d.projects) app.projects = d.projects;
+        if (d.settings) app.settings = d.settings;
+        save(); alert('Imported!'); refresh();
+      } catch { alert('Import failed — invalid JSON'); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  // ── CLOCK ──────────────────────────────────────────────────────────────────
+  function tick() {
+    const n = new Date();
+    document.getElementById('header-time').textContent =
+      n.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' })
+      + ' · ' + String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+  }
+
+  // ── EVENT LISTENERS ────────────────────────────────────────────────────────
+  // Nav
+  document.querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+
+  // FAB
+  document.getElementById('fab').addEventListener('click', openQA);
+
+  // Theme
+  document.getElementById('theme-btn').addEventListener('click', () => {
+    const light = document.body.classList.toggle('light');
+    localStorage.setItem('theme', light ? 'light' : 'dark');
+    document.getElementById('theme-btn').textContent = light ? '☀️' : '🌙';
+  });
+
+  // Task modal
+  document.getElementById('task-close').addEventListener('click', closeTaskModal);
+  document.getElementById('task-modal').addEventListener('click', e => { if (e.target.id === 'task-modal') closeTaskModal(); });
+  document.getElementById('t-save').addEventListener('click', saveTask);
+  document.getElementById('t-delete').addEventListener('click', deleteTask);
+  document.getElementById('t-archive').addEventListener('click', archiveTask);
+  document.getElementById('t-flag').addEventListener('click', () => {
+    const t = app.tasks.find(x => x.id === app.openTaskId); if (!t) return;
+    t.priority = !t.priority;
+    const fb = document.getElementById('t-flag');
+    fb.style.opacity = t.priority ? '1' : '0.5';
+    fb.style.color       = t.priority ? 'var(--flagged)' : '';
+    fb.style.borderColor = t.priority ? 'var(--flagged)' : '';
+    save();
+  });
+  document.querySelectorAll('.status-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.status-btn').forEach(b => b.className = 'status-btn');
+      btn.className = `status-btn sel-${sc(btn.dataset.s)}`;
+      document.getElementById('t-archive').style.display = btn.dataset.s === 'DONE' ? '' : 'none';
+    });
+  });
+  document.getElementById('t-project').addEventListener('change', e => {
+    const t = app.tasks.find(x => x.id === app.openTaskId);
+    fillStreams(e.target.value, t?.stage);
+  });
+
+  // Meeting modal
+  document.getElementById('m-close').addEventListener('click', closeMtgModal);
+  document.getElementById('meeting-modal').addEventListener('click', e => { if (e.target.id === 'meeting-modal') closeMtgModal(); });
+  document.getElementById('m-save').addEventListener('click', saveMtg);
+  document.getElementById('m-delete').addEventListener('click', deleteMtg);
+  document.getElementById('m-flag').addEventListener('click', toggleMtgFlag);
+
+  // Quick add
+  document.getElementById('qa-close').addEventListener('click', closeQA);
+  document.getElementById('qa-overlay').addEventListener('click', e => { if (e.target.id === 'qa-overlay') closeQA(); });
+  document.getElementById('qa-add').addEventListener('click', addTask);
+  document.getElementById('qa-title-input').addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+
+  // Filter chips
+  document.querySelectorAll('.filter-chip').forEach(c => {
+    c.addEventListener('click', () => {
+      document.querySelectorAll('.filter-chip').forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+      app.taskFilter = c.dataset.filter;
+      renderTasks();
+    });
+  });
+
+  // ── INIT ───────────────────────────────────────────────────────────────────
+  load();
+  tick();
+  setInterval(tick, 15000);
+  document.getElementById('theme-btn').textContent = document.body.classList.contains('light') ? '☀️' : '🌙';
+  switchTab('today');
+</script>
+</body>
+</html>
